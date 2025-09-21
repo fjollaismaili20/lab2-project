@@ -1,69 +1,151 @@
 import Blog from "../models/blogSchema.js";
+import { catchAsyncErrors } from "../middlewares/catchAsyncError.js";
+import ErrorHandler from "../middlewares/error.js";
 
 // Funksioni për të marrë të gjitha blogjet
-export const getBlogs = async (req, res) => {
+export const getBlogs = catchAsyncErrors(async (req, res, next) => {
   try {
-    const blogs = await Blog.find();
-    res.status(200).json(blogs);
+    const blogs = await Blog.find().sort({ createdAt: -1 });
+    res.status(200).json({
+      success: true,
+      blogs,
+    });
   } catch (error) {
     console.error("Error fetching blogs:", error);
-    res.status(500).json({ message: error.message });
+    return next(new ErrorHandler("Failed to fetch blogs", 500));
   }
-};
+});
 
-// Funksioni për të krijuar një blog të ri
-export const createBlog = async (req, res) => {
-  const newBlog = new Blog(req.body);
+// Funksioni për të krijuar një blog të ri (vetëm për Employers)
+export const createBlog = catchAsyncErrors(async (req, res, next) => {
+  const { role, name, id } = req.user;
+  
+  // Kontrollo nëse përdoruesi është Employer
+  if (role !== "Employer") {
+    return next(
+      new ErrorHandler("Only Employers are allowed to create blogs.", 403)
+    );
+  }
+
+  const { title, content } = req.body;
+  
+  if (!title || !content) {
+    return next(new ErrorHandler("Please provide both title and content.", 400));
+  }
 
   try {
+    const newBlog = new Blog({
+      title,
+      content,
+      author: name,
+      authorId: id,
+    });
+
     const savedBlog = await newBlog.save();
-    res.status(201).json(savedBlog);
+    res.status(201).json({
+      success: true,
+      message: "Blog created successfully!",
+      blog: savedBlog,
+    });
   } catch (error) {
     console.error("Error creating blog:", error);
-    res.status(500).json({ message: error.message });
+    return next(new ErrorHandler("Failed to create blog", 500));
   }
-};
+});
 
-// Funksioni për të përditësuar një blog
-export const updateBlog = async (req, res) => {
+// Funksioni për të përditësuar një blog (vetëm nga autori)
+export const updateBlog = catchAsyncErrors(async (req, res, next) => {
   const { id } = req.params;
+  const { role, id: userId } = req.user;
+
+  // Kontrollo nëse përdoruesi është Employer
+  if (role !== "Employer") {
+    return next(
+      new ErrorHandler("Only Employers are allowed to update blogs.", 403)
+    );
+  }
 
   try {
+    // Gjej blogun për të kontrolluar autorin
+    const existingBlog = await Blog.findById(id);
+    if (!existingBlog) {
+      return next(new ErrorHandler("Blog not found!", 404));
+    }
+
+    // Kontrollo nëse përdoruesi është autori i blogut
+    if (existingBlog.authorId !== userId.toString()) {
+      return next(
+        new ErrorHandler("You can only update your own blogs.", 403)
+      );
+    }
+
     const updatedBlog = await Blog.findByIdAndUpdate(id, req.body, {
       new: true,
     });
-    res.status(200).json(updatedBlog);
+
+    res.status(200).json({
+      success: true,
+      message: "Blog updated successfully!",
+      blog: updatedBlog,
+    });
   } catch (error) {
     console.error("Error updating blog:", error);
-    res.status(500).json({ message: error.message });
+    return next(new ErrorHandler("Failed to update blog", 500));
   }
-};
+});
 
-// Funksioni për të fshirë një blog
-export const deleteBlog = async (req, res) => {
+// Funksioni për të fshirë një blog (vetëm nga autori)
+export const deleteBlog = catchAsyncErrors(async (req, res, next) => {
   const { id } = req.params;
+  const { role, id: userId } = req.user;
+
+  // Kontrollo nëse përdoruesi është Employer
+  if (role !== "Employer") {
+    return next(
+      new ErrorHandler("Only Employers are allowed to delete blogs.", 403)
+    );
+  }
 
   try {
+    // Gjej blogun për të kontrolluar autorin
+    const existingBlog = await Blog.findById(id);
+    if (!existingBlog) {
+      return next(new ErrorHandler("Blog not found!", 404));
+    }
+
+    // Kontrollo nëse përdoruesi është autori i blogut
+    if (existingBlog.authorId !== userId.toString()) {
+      return next(
+        new ErrorHandler("You can only delete your own blogs.", 403)
+      );
+    }
+
     await Blog.findByIdAndDelete(id);
-    res.status(204).send(); // Dërgon një përgjigje të suksesshme pa përmbajtje
+    res.status(200).json({
+      success: true,
+      message: "Blog deleted successfully!",
+    });
   } catch (error) {
     console.error("Error deleting blog:", error);
-    res.status(500).json({ message: error.message });
+    return next(new ErrorHandler("Failed to delete blog", 500));
   }
-};
+});
 
 // Funksioni për të marrë një blog sipas ID
-export const getBlogById = async (req, res) => {
+export const getBlogById = catchAsyncErrors(async (req, res, next) => {
   const { id } = req.params;
 
   try {
     const blog = await Blog.findById(id);
     if (!blog) {
-      return res.status(404).json({ message: "Blog not found" });
+      return next(new ErrorHandler("Blog not found!", 404));
     }
-    res.status(200).json(blog);
+    res.status(200).json({
+      success: true,
+      blog,
+    });
   } catch (error) {
     console.error("Error fetching blog:", error);
-    res.status(500).json({ message: error.message });
+    return next(new ErrorHandler("Failed to fetch blog", 500));
   }
-};
+});

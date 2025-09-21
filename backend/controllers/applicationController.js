@@ -180,3 +180,45 @@ export const jobseekerDeleteApplication = catchAsyncErrors(
     }
   }
 );
+
+export const downloadResume = catchAsyncErrors(async (req, res, next) => {
+  const { filename } = req.params;
+  
+  // Security check - ensure filename doesn't contain path traversal
+  if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+    return next(new ErrorHandler("Invalid filename", 400));
+  }
+  
+  const filePath = path.join(__dirname, '..', 'uploads', 'resumes', filename);
+  
+  // Check if file exists
+  if (!fs.existsSync(filePath)) {
+    return next(new ErrorHandler("File not found", 404));
+  }
+  
+  // Set appropriate headers for download
+  const fileExtension = path.extname(filename).toLowerCase();
+  let contentType = 'application/octet-stream';
+  
+  if (fileExtension === '.pdf') {
+    contentType = 'application/pdf';
+  } else if (fileExtension === '.jpg' || fileExtension === '.jpeg') {
+    contentType = 'image/jpeg';
+  } else if (fileExtension === '.png') {
+    contentType = 'image/png';
+  } else if (fileExtension === '.webp') {
+    contentType = 'image/webp';
+  }
+  
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  
+  // Stream the file
+  const fileStream = fs.createReadStream(filePath);
+  fileStream.pipe(res);
+  
+  fileStream.on('error', (error) => {
+    console.error('File stream error:', error);
+    return next(new ErrorHandler("Error reading file", 500));
+  });
+});

@@ -59,14 +59,70 @@ const MyApplications = () => {
     }
   };
 
-  const openModal = (imageUrl) => {
+  const openModal = (fileUrl) => {
     // Prepend server URL if it's a relative path
-    const fullImageUrl = imageUrl.startsWith('http') 
-      ? imageUrl 
-      : `http://localhost:4000/${imageUrl}`;
-    setResumeImageUrl(fullImageUrl);
-    setModalOpen(true);
+    const fullFileUrl = fileUrl.startsWith('http') 
+      ? fileUrl 
+      : `http://localhost:4000/${fileUrl}`;
+    
+    // Check if it's a PDF file
+    const isPdf = fileUrl.toLowerCase().endsWith('.pdf');
+    
+    if (isPdf) {
+      // For PDFs, trigger download
+      downloadFile(fullFileUrl, getFilenameFromUrl(fullFileUrl));
+    } else {
+      // For images, show in modal
+      setResumeImageUrl(fullFileUrl);
+      setModalOpen(true);
+    }
   };
+
+  const downloadFile = (url, filename) => {
+    // Extract just the filename from the URL for the API call
+    const justFilename = filename || getFilenameFromUrl(url);
+    const downloadUrl = `http://localhost:4000/api/v1/application/download/${justFilename}`;
+    
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = justFilename;
+    link.target = '_blank';
+    
+    // Add authentication headers by using fetch instead of direct link
+    fetch(downloadUrl, {
+      method: 'GET',
+      credentials: 'include', // Include cookies for authentication
+    })
+    .then(response => {
+      if (response.ok) {
+        return response.blob();
+      }
+      throw new Error('Download failed');
+    })
+    .then(blob => {
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = justFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    })
+    .catch(error => {
+      console.error('Download error:', error);
+      // Fallback to direct URL
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  };
+
+  const getFilenameFromUrl = (url) => {
+    return url.split('/').pop() || 'resume.pdf';
+  };
+
 
   const closeModal = () => {
     setModalOpen(false);
@@ -124,6 +180,66 @@ const MyApplications = () => {
 
 export default MyApplications;
 
+const ResumePreview = ({ resumeUrl, onClick }) => {
+  const isPdf = resumeUrl && resumeUrl.toLowerCase().endsWith('.pdf');
+  const isImage = resumeUrl && (
+    resumeUrl.toLowerCase().endsWith('.png') || 
+    resumeUrl.toLowerCase().endsWith('.jpg') || 
+    resumeUrl.toLowerCase().endsWith('.jpeg') || 
+    resumeUrl.toLowerCase().endsWith('.webp')
+  );
+  const fullUrl = resumeUrl.startsWith('http') 
+    ? resumeUrl 
+    : `http://localhost:4000/${resumeUrl}`;
+
+  if (isPdf) {
+    return (
+      <div className="pdf-preview" onClick={onClick} style={{ cursor: 'pointer' }}>
+        <div className="pdf-icon" style={{
+          width: '100px',
+          height: '120px',
+          backgroundColor: '#f8f9fa',
+          border: '2px solid #e74c3c',
+          borderRadius: '12px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '12px',
+          color: '#2c3e50',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          transition: 'all 0.3s ease',
+          ':hover': {
+            backgroundColor: '#e74c3c',
+            color: 'white'
+          }
+        }}>
+          <div style={{ fontSize: '28px', marginBottom: '8px', color: '#e74c3c' }}>📄</div>
+          <div style={{ fontWeight: 'bold', textAlign: 'center' }}>PDF Resume</div>
+          <div style={{ fontSize: '10px', marginTop: '4px', opacity: 0.8 }}>Click to download</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={fullUrl}
+      alt="resume"
+      onClick={onClick}
+      style={{ 
+        cursor: 'pointer',
+        maxWidth: '100px',
+        maxHeight: '120px',
+        objectFit: 'cover',
+        borderRadius: '8px',
+        border: '2px solid #ddd',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      }}
+    />
+  );
+};
+
 const JobSeekerCard = ({ element, deleteApplication, openModal }) => {
   return (
     <>
@@ -146,11 +262,8 @@ const JobSeekerCard = ({ element, deleteApplication, openModal }) => {
           </p>
         </div>
         <div className="resume">
-          <img
-            src={element.resume_url.startsWith('http') 
-              ? element.resume_url 
-              : `http://localhost:4000/${element.resume_url}`}
-            alt="resume"
+          <ResumePreview 
+            resumeUrl={element.resume_url}
             onClick={() => openModal(element.resume_url)}
           />
         </div>
@@ -186,11 +299,8 @@ const EmployerCard = ({ element, openModal }) => {
           </p>
         </div>
         <div className="resume">
-          <img
-            src={element.resume_url.startsWith('http') 
-              ? element.resume_url 
-              : `http://localhost:4000/${element.resume_url}`}
-            alt="resume"
+          <ResumePreview 
+            resumeUrl={element.resume_url}
             onClick={() => openModal(element.resume_url)}
           />
         </div>
