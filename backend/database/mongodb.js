@@ -9,7 +9,7 @@ export const connectMongoDB = async () => {
       return;
     }
     
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/job_blog');
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/job_blog');
     
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {

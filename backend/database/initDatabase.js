@@ -1,6 +1,6 @@
 // Database initialization script
 import { initializeDatabase } from './postgresSchemas.js';
-import { postgresConnection } from './mysqldb.js';
+import { postgresConnection } from './postgresdb.js';
 import { connectMongoDB } from './mongodb.js';
 
 export const initDatabases = async () => {

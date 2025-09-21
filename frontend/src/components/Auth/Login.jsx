@@ -19,7 +19,7 @@ const Login = () => {
     try {
       const { data } = await axios.post(
         "http://localhost:4000/api/v1/user/login",
-        { email, password, role },
+        { email, password },
         {
           headers: {
             "Content-Type": "application/json",
@@ -50,17 +50,6 @@ const Login = () => {
             <h3>Login to your account</h3>
           </div>
           <form>
-            <div className="inputTag">
-              <label>Login As</label>
-              <div>
-                <select value={role} onChange={(e) => setRole(e.target.value)}>
-                  <option value="">Select Role</option>
-                  <option value="Employer">Employer</option>
-                  <option value="Job Seeker">Job Seeker</option>
-                </select>
-                <FaRegUser />
-              </div>
-            </div>
             <div className="inputTag">
               <label>Email Address</label>
               <div>
