@@ -15,28 +15,33 @@ const MyApplications = () => {
   const navigateTo = useNavigate();
 
   useEffect(() => {
-    try {
-      if (user && user.role === "Employer") {
-        axios
-          .get("http://localhost:4000/api/v1/application/employer/getall", {
+    const fetchApplications = async () => {
+      try {
+        if (user && user.role === "Employer") {
+          const response = await axios.get("http://localhost:4000/api/v1/application/employer/getall", {
             withCredentials: true,
-          })
-          .then((res) => {
-            setApplications(res.data.applications);
           });
-      } else {
-        axios
-          .get("http://localhost:4000/api/v1/application/jobseeker/getall", {
+          setApplications(response.data.applications);
+        } else if (user && user.role === "Job Seeker") {
+          const response = await axios.get("http://localhost:4000/api/v1/application/jobseeker/getall", {
             withCredentials: true,
-          })
-          .then((res) => {
-            setApplications(res.data.applications);
           });
+          setApplications(response.data.applications);
+        }
+      } catch (error) {
+        console.error('Error fetching applications:', error);
+        if (error.response?.data?.message) {
+          toast.error(error.response.data.message);
+        } else {
+          toast.error('Failed to fetch applications');
+        }
       }
-    } catch (error) {
-      toast.error(error.response.data.message);
+    };
+
+    if (user && isAuthorized) {
+      fetchApplications();
     }
-  }, [isAuthorized]);
+  }, [user, isAuthorized]);
 
   if (!isAuthorized) {
     navigateTo("/");
@@ -79,14 +84,16 @@ const MyApplications = () => {
   };
 
   const downloadFile = (url, filename) => {
+    // Check if it's an old Cloudinary URL or external URL
+    if (url.includes('cloudinary.com') || (url.startsWith('http') && !url.includes('localhost'))) {
+      // For old Cloudinary URLs or external URLs, show an error message
+      toast.error('This file is no longer available. Please ask the applicant to resubmit their resume.');
+      return;
+    }
+    
     // Extract just the filename from the URL for the API call
     const justFilename = filename || getFilenameFromUrl(url);
     const downloadUrl = `http://localhost:4000/api/v1/application/download/${justFilename}`;
-    
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = justFilename;
-    link.target = '_blank';
     
     // Add authentication headers by using fetch instead of direct link
     fetch(downloadUrl, {
@@ -97,7 +104,10 @@ const MyApplications = () => {
       if (response.ok) {
         return response.blob();
       }
-      throw new Error('Download failed');
+      return response.text().then(text => {
+        console.error('Download failed response:', text);
+        throw new Error(`Download failed: ${response.status} - ${text}`);
+      });
     })
     .then(blob => {
       const blobUrl = window.URL.createObjectURL(blob);
@@ -108,14 +118,11 @@ const MyApplications = () => {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
+      toast.success('File downloaded successfully!');
     })
     .catch(error => {
       console.error('Download error:', error);
-      // Fallback to direct URL
-      link.href = url;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      toast.error(`Download failed: ${error.message}`);
     });
   };
 
@@ -151,7 +158,7 @@ const MyApplications = () => {
             })
           )}
         </div>
-      ) : (
+      ) : user && user.role === "Employer" ? (
         <div className="container">
           <h1>Applications From Job Seekers</h1>
           {applications.length <= 0 ? (
@@ -170,6 +177,10 @@ const MyApplications = () => {
             })
           )}
         </div>
+      ) : (
+        <div className="container">
+          <h1>Loading...</h1>
+        </div>
       )}
       {modalOpen && (
         <ResumeModal imageUrl={resumeImageUrl} onClose={closeModal} />
@@ -181,13 +192,20 @@ const MyApplications = () => {
 export default MyApplications;
 
 const ResumePreview = ({ resumeUrl, onClick }) => {
-  const isPdf = resumeUrl && resumeUrl.toLowerCase().endsWith('.pdf');
+  const isPdf = resumeUrl && resumeUrl.toLowerCase().includes('.pdf');
   const isImage = resumeUrl && (
-    resumeUrl.toLowerCase().endsWith('.png') || 
-    resumeUrl.toLowerCase().endsWith('.jpg') || 
-    resumeUrl.toLowerCase().endsWith('.jpeg') || 
-    resumeUrl.toLowerCase().endsWith('.webp')
+    resumeUrl.toLowerCase().includes('.png') || 
+    resumeUrl.toLowerCase().includes('.jpg') || 
+    resumeUrl.toLowerCase().includes('.jpeg') || 
+    resumeUrl.toLowerCase().includes('.webp')
   );
+  
+  // Check if it's an old Cloudinary URL or external URL (but not localhost)
+  const isOldCloudinaryUrl = resumeUrl && (
+    resumeUrl.includes('cloudinary.com') || 
+    (resumeUrl.startsWith('http') && !resumeUrl.includes('localhost'))
+  );
+  
   const fullUrl = resumeUrl.startsWith('http') 
     ? resumeUrl 
     : `http://localhost:4000/${resumeUrl}`;
@@ -198,8 +216,8 @@ const ResumePreview = ({ resumeUrl, onClick }) => {
         <div className="pdf-icon" style={{
           width: '100px',
           height: '120px',
-          backgroundColor: '#f8f9fa',
-          border: '2px solid #e74c3c',
+          backgroundColor: isOldCloudinaryUrl ? '#fff3cd' : '#f8f9fa',
+          border: `2px solid ${isOldCloudinaryUrl ? '#ffc107' : '#e74c3c'}`,
           borderRadius: '12px',
           display: 'flex',
           flexDirection: 'column',
@@ -210,14 +228,45 @@ const ResumePreview = ({ resumeUrl, onClick }) => {
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           transition: 'all 0.3s ease',
           ':hover': {
-            backgroundColor: '#e74c3c',
+            backgroundColor: isOldCloudinaryUrl ? '#ffc107' : '#e74c3c',
             color: 'white'
           }
         }}>
-          <div style={{ fontSize: '28px', marginBottom: '8px', color: '#e74c3c' }}>📄</div>
-          <div style={{ fontWeight: 'bold', textAlign: 'center' }}>PDF Resume</div>
-          <div style={{ fontSize: '10px', marginTop: '4px', opacity: 0.8 }}>Click to download</div>
+          <div style={{ fontSize: '28px', marginBottom: '8px', color: isOldCloudinaryUrl ? '#ffc107' : '#e74c3c' }}>
+            {isOldCloudinaryUrl ? '⚠️' : '📄'}
+          </div>
+          <div style={{ fontWeight: 'bold', textAlign: 'center' }}>
+            {isOldCloudinaryUrl ? 'Old Resume' : 'PDF Resume'}
+          </div>
+          <div style={{ fontSize: '10px', marginTop: '4px', opacity: 0.8 }}>
+            {isOldCloudinaryUrl ? 'File unavailable' : 'Click to download'}
+          </div>
         </div>
+      </div>
+    );
+  }
+
+  if (isOldCloudinaryUrl) {
+    // Show a placeholder for old Cloudinary images
+    return (
+      <div className="old-image-placeholder" onClick={onClick} style={{ 
+        cursor: 'pointer',
+        width: '100px',
+        height: '120px',
+        backgroundColor: '#fff3cd',
+        border: '2px solid #ffc107',
+        borderRadius: '8px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '12px',
+        color: '#856404',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      }}>
+        <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚠️</div>
+        <div style={{ fontWeight: 'bold', textAlign: 'center' }}>Old Image</div>
+        <div style={{ fontSize: '10px', marginTop: '4px', opacity: 0.8 }}>File unavailable</div>
       </div>
     );
   }

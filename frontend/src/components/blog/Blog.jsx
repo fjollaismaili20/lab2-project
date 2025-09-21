@@ -8,6 +8,8 @@ import './Blog.css';
 const Blog = () => {
   const [blogs, setBlogs] = useState([]);
   const [newBlog, setNewBlog] = useState({ title: '', content: '' });
+  const [coverImage, setCoverImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [isEditing, setIsEditing] = useState(false); 
   const [editBlogId, setEditBlogId] = useState(null);
   
@@ -34,6 +36,40 @@ const Blog = () => {
     navigateTo("/login");
   }
 
+  // Handle image file selection
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Please select a valid image file (PNG, JPEG, JPG, WEBP)');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+
+      setCoverImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Remove selected image
+  const removeImage = () => {
+    setCoverImage(null);
+    setImagePreview(null);
+  };
+
  
   const saveBlog = async () => {
     if (user?.role !== "Employer") {
@@ -41,12 +77,30 @@ const Blog = () => {
       return;
     }
 
+    if (!newBlog.title || !newBlog.content) {
+      toast.error("Please fill in both title and content");
+      return;
+    }
+
     try {
+      const formData = new FormData();
+      formData.append('title', newBlog.title);
+      formData.append('content', newBlog.content);
+      
+      if (coverImage) {
+        formData.append('coverImage', coverImage);
+      }
+
       if (isEditing) {
         const response = await axios.put(
           `http://localhost:4000/api/v1/blogs/${editBlogId}`, 
-          newBlog,
-          { withCredentials: true }
+          formData,
+          { 
+            withCredentials: true,
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            }
+          }
         );
         setBlogs(blogs.map((blog) => (blog._id === editBlogId ? response.data.blog : blog)));
         setIsEditing(false); 
@@ -55,13 +109,22 @@ const Blog = () => {
       } else {
         const response = await axios.post(
           "http://localhost:4000/api/v1/blogs", 
-          newBlog,
-          { withCredentials: true }
+          formData,
+          { 
+            withCredentials: true,
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            }
+          }
         );
         setBlogs([response.data.blog, ...blogs]); 
         toast.success("Blog created successfully!");
       }
-      setNewBlog({ title: '', content: '' }); 
+      
+      // Reset form
+      setNewBlog({ title: '', content: '' });
+      setCoverImage(null);
+      setImagePreview(null);
     } catch (error) {
       console.error("Error saving blog:", error);
       toast.error(error.response?.data?.message || "Failed to save blog");
@@ -103,13 +166,23 @@ const Blog = () => {
     
     setIsEditing(true); 
     setEditBlogId(blog._id); 
-    setNewBlog({ title: blog.title, content: blog.content }); 
+    setNewBlog({ title: blog.title, content: blog.content });
+    
+    // Set existing cover image preview if available
+    if (blog.coverImage && blog.coverImage.url) {
+      setImagePreview(`http://localhost:4000/${blog.coverImage.url}`);
+    } else {
+      setImagePreview(null);
+    }
+    setCoverImage(null); // Reset file input
   };
 
   const cancelEdit = () => {
     setIsEditing(false);
     setEditBlogId(null);
     setNewBlog({ title: '', content: '' });
+    setCoverImage(null);
+    setImagePreview(null);
   };
 
   return (
@@ -128,6 +201,17 @@ const Blog = () => {
         ) : (
           blogs.map((blog) => (
             <div key={blog._id} className="blogItem">
+              {/* Cover Image */}
+              {blog.coverImage && blog.coverImage.url && (
+                <div className="blogCoverImage">
+                  <img 
+                    src={`http://localhost:4000/${blog.coverImage.url}`} 
+                    alt={blog.title}
+                    className="coverImage"
+                  />
+                </div>
+              )}
+              
               <div className="blogHeader">
                 <h2 className="blogTitle">{blog.title}</h2>
                 <div className="blogMeta">
@@ -167,6 +251,43 @@ const Blog = () => {
               placeholder="Blog Title"
               className="blogTitleInput"
             />
+            
+            {/* Cover Image Upload Section */}
+            <div className="imageUploadSection">
+              <label className="imageUploadLabel">
+                Cover Image (Optional)
+              </label>
+              
+              {imagePreview ? (
+                <div className="imagePreview">
+                  <img src={imagePreview} alt="Cover preview" className="previewImage" />
+                  <button 
+                    type="button" 
+                    className="removeImageButton"
+                    onClick={removeImage}
+                  >
+                    ✕ Remove Image
+                  </button>
+                </div>
+              ) : (
+                <div className="imageUploadArea">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    onChange={handleImageChange}
+                    className="imageInput"
+                    id="coverImageInput"
+                  />
+                  <label htmlFor="coverImageInput" className="imageUploadButton">
+                    📷 Choose Cover Image
+                  </label>
+                  <p className="imageUploadHint">
+                    Supported formats: PNG, JPEG, JPG, WEBP (Max: 5MB)
+                  </p>
+                </div>
+              )}
+            </div>
+
             <textarea
               value={newBlog.content}
               onChange={(e) => setNewBlog({ ...newBlog, content: e.target.value })}
@@ -174,6 +295,7 @@ const Blog = () => {
               className="blogContentInput"
               rows="6"
             ></textarea>
+            
             <div className="formButtons">
               <button className="addButton" onClick={saveBlog}>
                 {isEditing ? "Update Blog" : "Publish Blog"} 

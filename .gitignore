@@ -15,6 +15,8 @@ dist-ssr
 # Uploaded files
 backend/uploads/resumes/*
 !backend/uploads/resumes/.gitkeep
+backend/uploads/blog-images/*
+!backend/uploads/blog-images/.gitkeep
 
 # Editor directories and files
 .vscode/*
