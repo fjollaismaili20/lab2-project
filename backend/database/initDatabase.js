@@ -2,6 +2,7 @@
 import { initializeDatabase } from './postgresSchemas.js';
 import { postgresConnection } from './postgresdb.js';
 import { connectMongoDB } from './mongodb.js';
+import { seedDatabase } from './seeder.js';
 
 export const initDatabases = async () => {
   try {
@@ -10,6 +11,9 @@ export const initDatabases = async () => {
     await postgresConnection();
     await initializeDatabase();
     console.log('PostgreSQL database initialized successfully');
+    
+    // Seed database with initial data if empty
+    await seedDatabase();
     
     // Initialize MongoDB connection for blog functionality (optional)
     console.log('Initializing MongoDB database...');
