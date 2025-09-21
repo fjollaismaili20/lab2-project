@@ -26,7 +26,17 @@ const blogSchema = new mongoose.Schema({
       type: String,
       default: null,
     }
-  }
+  },
+  additionalImages: [{
+    filename: {
+      type: String,
+      required: true,
+    },
+    url: {
+      type: String,
+      required: true,
+    }
+  }]
 }, { timestamps: true });
 
 const Blog = mongoose.model('Blog', blogSchema); // Krijo modelin

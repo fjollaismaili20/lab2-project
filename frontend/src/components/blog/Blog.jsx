@@ -10,6 +10,8 @@ const Blog = () => {
   const [newBlog, setNewBlog] = useState({ title: '', content: '' });
   const [coverImage, setCoverImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [additionalImages, setAdditionalImages] = useState([]);
+  const [additionalImagePreviews, setAdditionalImagePreviews] = useState([]);
   const [isEditing, setIsEditing] = useState(false); 
   const [editBlogId, setEditBlogId] = useState(null);
   
@@ -70,6 +72,66 @@ const Blog = () => {
     setImagePreview(null);
   };
 
+  // Handle additional images selection
+  const handleAdditionalImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    if (files.length === 0) return;
+
+    // Validate file types and sizes
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    
+    const validFiles = [];
+    const previews = [];
+
+    files.forEach((file, index) => {
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`File ${index + 1}: Please select a valid image file (PNG, JPEG, JPG, WEBP)`);
+        return;
+      }
+      
+      if (file.size > maxSize) {
+        toast.error(`File ${index + 1}: Image size should be less than 5MB`);
+        return;
+      }
+
+      validFiles.push(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previews.push({
+          file: file,
+          preview: e.target.result,
+          id: Math.random().toString(36).substring(2, 15)
+        });
+        
+        // Update state when all previews are loaded
+        if (previews.length === validFiles.length) {
+          setAdditionalImages(validFiles);
+          setAdditionalImagePreviews(previews);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Remove individual additional image
+  const removeAdditionalImage = (imageId) => {
+    const updatedPreviews = additionalImagePreviews.filter(img => img.id !== imageId);
+    const updatedFiles = updatedPreviews.map(img => img.file);
+    
+    setAdditionalImagePreviews(updatedPreviews);
+    setAdditionalImages(updatedFiles);
+  };
+
+  // Clear all additional images
+  const clearAdditionalImages = () => {
+    setAdditionalImages([]);
+    setAdditionalImagePreviews([]);
+  };
+
  
   const saveBlog = async () => {
     if (user?.role !== "Employer") {
@@ -89,6 +151,13 @@ const Blog = () => {
       
       if (coverImage) {
         formData.append('coverImage', coverImage);
+      }
+
+      // Add additional images
+      if (additionalImages.length > 0) {
+        additionalImages.forEach((image, index) => {
+          formData.append('additionalImages', image);
+        });
       }
 
       if (isEditing) {
@@ -125,6 +194,8 @@ const Blog = () => {
       setNewBlog({ title: '', content: '' });
       setCoverImage(null);
       setImagePreview(null);
+      setAdditionalImages([]);
+      setAdditionalImagePreviews([]);
     } catch (error) {
       console.error("Error saving blog:", error);
       toast.error(error.response?.data?.message || "Failed to save blog");
@@ -183,6 +254,8 @@ const Blog = () => {
     setNewBlog({ title: '', content: '' });
     setCoverImage(null);
     setImagePreview(null);
+    setAdditionalImages([]);
+    setAdditionalImagePreviews([]);
   };
 
   return (
@@ -222,6 +295,23 @@ const Blog = () => {
                 </div>
               </div>
               <p className="blogContent">{blog.content}</p>
+              
+              {/* Additional Images Gallery */}
+              {blog.additionalImages && blog.additionalImages.length > 0 && (
+                <div className="blogAdditionalImages">
+                  <div className="imageGallery">
+                    {blog.additionalImages.map((image, index) => (
+                      <div key={index} className="galleryImage">
+                        <img 
+                          src={`http://localhost:4000/${image.url}`} 
+                          alt={`Blog image ${index + 1}`}
+                          className="additionalImage"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               {/* Show edit/delete buttons only to Employers who own the blog */}
               {user?.role === "Employer" && blog.authorId === user.id.toString() && (
@@ -283,6 +373,62 @@ const Blog = () => {
                   </label>
                   <p className="imageUploadHint">
                     Supported formats: PNG, JPEG, JPG, WEBP (Max: 5MB)
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Additional Images Upload Section */}
+            <div className="imageUploadSection">
+              <label className="imageUploadLabel">
+                Additional Images (Optional)
+              </label>
+              
+              {additionalImagePreviews.length > 0 ? (
+                <div className="additionalImagesPreview">
+                  <div className="previewGrid">
+                    {additionalImagePreviews.map((imageData) => (
+                      <div key={imageData.id} className="previewImageContainer">
+                        <img 
+                          src={imageData.preview} 
+                          alt="Additional preview" 
+                          className="previewImage"
+                        />
+                        <button 
+                          type="button" 
+                          className="removeImageButton"
+                          onClick={() => removeAdditionalImage(imageData.id)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="additionalImageActions">
+                    <button 
+                      type="button" 
+                      className="clearAllButton"
+                      onClick={clearAdditionalImages}
+                    >
+                      Clear All Images
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="imageUploadArea">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    onChange={handleAdditionalImagesChange}
+                    className="imageInput"
+                    id="additionalImagesInput"
+                    multiple
+                  />
+                  <label htmlFor="additionalImagesInput" className="imageUploadButton">
+                    📷 Choose Additional Images
+                  </label>
+                  <p className="imageUploadHint">
+                    You can select multiple images (PNG, JPEG, JPG, WEBP - Max: 5MB each)
                   </p>
                 </div>
               )}

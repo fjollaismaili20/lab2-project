@@ -321,6 +321,106 @@
     background-color: rgba(244, 67, 54, 1);
 }
 
+/* Additional Images Gallery */
+.blogAdditionalImages {
+    margin: 20px 0;
+}
+
+.imageGallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.galleryImage {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.galleryImage:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.additionalImage {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+}
+
+/* Additional Images Upload */
+.additionalImagesPreview {
+    margin-top: 15px;
+}
+
+.previewGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.previewImageContainer {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.previewImageContainer .previewImage {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    display: block;
+}
+
+.previewImageContainer .removeImageButton {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: rgba(244, 67, 54, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.previewImageContainer .removeImageButton:hover {
+    background-color: rgba(244, 67, 54, 1);
+}
+
+.additionalImageActions {
+    display: flex;
+    justify-content: center;
+}
+
+.clearAllButton {
+    background-color: #6c757d;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.clearAllButton:hover {
+    background-color: #5a6268;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .coverImage {
@@ -333,5 +433,23 @@
     
     .imageUploadArea {
         padding: 20px;
+    }
+
+    .imageGallery {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+    }
+
+    .additionalImage {
+        height: 120px;
+    }
+
+    .previewGrid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 8px;
+    }
+
+    .previewImageContainer .previewImage {
+        height: 80px;
     }
 }

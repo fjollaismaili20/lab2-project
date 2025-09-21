@@ -40,6 +40,7 @@ export const createBlog = catchAsyncErrors(async (req, res, next) => {
   }
 
   let coverImageData = null;
+  let additionalImagesData = [];
 
   // Handle cover image upload if provided
   if (req.files && req.files.coverImage) {
@@ -79,6 +80,49 @@ export const createBlog = catchAsyncErrors(async (req, res, next) => {
     }
   }
 
+  // Handle additional images upload if provided
+  if (req.files && req.files.additionalImages) {
+    const additionalImages = Array.isArray(req.files.additionalImages) 
+      ? req.files.additionalImages 
+      : [req.files.additionalImages];
+    
+    const allowedFormats = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    const uploadsDir = path.join(__dirname, '..', 'uploads', 'blog-images');
+    
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    for (let i = 0; i < additionalImages.length; i++) {
+      const image = additionalImages[i];
+      
+      if (!allowedFormats.includes(image.mimetype)) {
+        return next(
+          new ErrorHandler(`Invalid image type for image ${i + 1}. Please upload PNG, JPEG, JPG, or WEBP files.`, 400)
+        );
+      }
+
+      // Generate unique filename for each additional image
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const originalExtension = path.extname(image.name);
+      const filename = `blog_additional_${timestamp}_${i}_${randomString}${originalExtension}`;
+      
+      const filePath = path.join(uploadsDir, filename);
+      
+      try {
+        await image.mv(filePath);
+        additionalImagesData.push({
+          filename: filename,
+          url: `uploads/blog-images/${filename}`
+        });
+      } catch (error) {
+        console.error(`Additional image ${i + 1} upload error:`, error);
+        return next(new ErrorHandler(`Failed to upload additional image ${i + 1}`, 500));
+      }
+    }
+  }
+
   try {
     const blogData = {
       title,
@@ -90,6 +134,11 @@ export const createBlog = catchAsyncErrors(async (req, res, next) => {
     // Add cover image data if available
     if (coverImageData) {
       blogData.coverImage = coverImageData;
+    }
+
+    // Add additional images data if available
+    if (additionalImagesData.length > 0) {
+      blogData.additionalImages = additionalImagesData;
     }
 
     const newBlog = new Blog(blogData);
@@ -184,6 +233,66 @@ export const updateBlog = catchAsyncErrors(async (req, res, next) => {
       }
     }
 
+    // Handle additional images upload if provided
+    if (req.files && req.files.additionalImages) {
+      const additionalImages = Array.isArray(req.files.additionalImages) 
+        ? req.files.additionalImages 
+        : [req.files.additionalImages];
+      
+      const allowedFormats = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+      const uploadsDir = path.join(__dirname, '..', 'uploads', 'blog-images');
+      
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      // Delete old additional images if they exist
+      if (existingBlog.additionalImages && existingBlog.additionalImages.length > 0) {
+        existingBlog.additionalImages.forEach(image => {
+          const oldImagePath = path.join(__dirname, '..', 'uploads', 'blog-images', image.filename);
+          if (fs.existsSync(oldImagePath)) {
+            try {
+              fs.unlinkSync(oldImagePath);
+            } catch (error) {
+              console.error("Error deleting old additional image:", error);
+            }
+          }
+        });
+      }
+
+      const additionalImagesData = [];
+      for (let i = 0; i < additionalImages.length; i++) {
+        const image = additionalImages[i];
+        
+        if (!allowedFormats.includes(image.mimetype)) {
+          return next(
+            new ErrorHandler(`Invalid image type for image ${i + 1}. Please upload PNG, JPEG, JPG, or WEBP files.`, 400)
+          );
+        }
+
+        // Generate unique filename for each additional image
+        const timestamp = Date.now();
+        const randomString = Math.random().toString(36).substring(2, 15);
+        const originalExtension = path.extname(image.name);
+        const filename = `blog_additional_${timestamp}_${i}_${randomString}${originalExtension}`;
+        
+        const filePath = path.join(uploadsDir, filename);
+        
+        try {
+          await image.mv(filePath);
+          additionalImagesData.push({
+            filename: filename,
+            url: `uploads/blog-images/${filename}`
+          });
+        } catch (error) {
+          console.error(`Additional image ${i + 1} upload error:`, error);
+          return next(new ErrorHandler(`Failed to upload additional image ${i + 1}`, 500));
+        }
+      }
+
+      updateData.additionalImages = additionalImagesData;
+    }
+
     const updatedBlog = await Blog.findByIdAndUpdate(id, updateData, {
       new: true,
     });
@@ -235,6 +344,20 @@ export const deleteBlog = catchAsyncErrors(async (req, res, next) => {
           console.error("Error deleting cover image:", error);
         }
       }
+    }
+
+    // Delete additional images if they exist
+    if (existingBlog.additionalImages && existingBlog.additionalImages.length > 0) {
+      existingBlog.additionalImages.forEach(image => {
+        const imagePath = path.join(__dirname, '..', 'uploads', 'blog-images', image.filename);
+        if (fs.existsSync(imagePath)) {
+          try {
+            fs.unlinkSync(imagePath);
+          } catch (error) {
+            console.error("Error deleting additional image:", error);
+          }
+        }
+      });
     }
 
     await Blog.findByIdAndDelete(id);
