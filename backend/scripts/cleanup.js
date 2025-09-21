@@ -81,50 +81,55 @@ const cleanupDatabase = async () => {
             
             // Begin transaction
             await client.query('BEGIN');
-            
-            // Disable foreign key checks temporarily for easier cleanup
-            await client.query('SET session_replication_role = replica;');
-            
+
             let totalDeleted = 0;
-            
-            // Clean tables in order
-            for (const table of TABLES_TO_CLEAN) {
-                try {
-                    const result = await client.query(`DELETE FROM ${table}`);
-                    const deletedCount = result.rowCount;
-                    totalDeleted += deletedCount;
-                    
-                    if (deletedCount > 0) {
-                        console.log(`   ✓ Cleaned ${table}: ${deletedCount} records deleted`);
-                    } else {
-                        console.log(`   • ${table}: already empty`);
+
+            // Prefer TRUNCATE with CASCADE and RESTART IDENTITY (no superuser needed)
+            let usedTruncate = false;
+            try {
+                await client.query('TRUNCATE TABLE applications, jobs, users, companies RESTART IDENTITY CASCADE');
+                usedTruncate = true;
+                totalDeleted = totalRecords; // we don't get per-table counts from TRUNCATE
+                console.log('   ✓ Truncated tables with CASCADE and reset identities');
+            } catch (truncateError) {
+                console.log(`   ⚠️  TRUNCATE failed (${truncateError.message}). Falling back to ordered deletes...`);
+
+                // Fallback: ordered DELETEs honoring FKs (no need to disable triggers)
+                for (const table of TABLES_TO_CLEAN) {
+                    try {
+                        const result = await client.query(`DELETE FROM ${table}`);
+                        const deletedCount = result.rowCount;
+                        totalDeleted += deletedCount;
+
+                        if (deletedCount > 0) {
+                            console.log(`   ✓ Cleaned ${table}: ${deletedCount} records deleted`);
+                        } else {
+                            console.log(`   • ${table}: already empty`);
+                        }
+                    } catch (error) {
+                        console.log(`   ⚠️  ${table}: ${error.message}`);
                     }
-                } catch (error) {
-                    console.log(`   ⚠️  ${table}: ${error.message}`);
                 }
-            }
-            
-            // Reset sequences to start from 1 again
-            console.log('\n🔄 Resetting auto-increment sequences...');
-            const sequenceResets = [
-                'ALTER SEQUENCE users_id_seq RESTART WITH 1',
-                'ALTER SEQUENCE jobs_id_seq RESTART WITH 1', 
-                'ALTER SEQUENCE applications_id_seq RESTART WITH 1',
-                'ALTER SEQUENCE companies_id_seq RESTART WITH 1'
-            ];
-            
-            for (const resetQuery of sequenceResets) {
-                try {
-                    await client.query(resetQuery);
-                } catch (error) {
-                    // Sequence might not exist, ignore error
+
+                // Reset sequences to start from 1 again
+                console.log('\n🔄 Resetting auto-increment sequences...');
+                const sequenceResets = [
+                    'ALTER SEQUENCE users_id_seq RESTART WITH 1',
+                    'ALTER SEQUENCE jobs_id_seq RESTART WITH 1', 
+                    'ALTER SEQUENCE applications_id_seq RESTART WITH 1',
+                    'ALTER SEQUENCE companies_id_seq RESTART WITH 1'
+                ];
+
+                for (const resetQuery of sequenceResets) {
+                    try {
+                        await client.query(resetQuery);
+                    } catch (error) {
+                        // Sequence might not exist, ignore error
+                    }
                 }
+                console.log('   ✓ Sequences reset successfully');
             }
-            console.log('   ✓ Sequences reset successfully');
-            
-            // Re-enable foreign key checks
-            await client.query('SET session_replication_role = DEFAULT;');
-            
+
             // Commit transaction
             await client.query('COMMIT');
             

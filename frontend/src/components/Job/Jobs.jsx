@@ -32,11 +32,14 @@ const Jobs = () => {
           {jobs.jobs &&
             jobs.jobs.map((element) => {
               return (
-                <div className="card" key={element._id}>
+                <div className="card" key={element.id}>
                   <p>{element.title}</p>
                   <p>{element.category}</p>
                   <p>{element.country}</p>
-                  <Link to={`/job/${element._id}`}>Job Details</Link>
+                  {element.company && (
+                    <p>Company: {element.company.companyName}</p>
+                  )}
+                  <Link to={`/job/${element.id}`}>Job Details</Link>
                 </div>
               );
             })}

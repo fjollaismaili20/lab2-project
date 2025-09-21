@@ -45,7 +45,7 @@ const MyJobs = () => {
 
   //Function For Updating The Job
   const handleUpdateJob = async (jobId) => {
-    const updatedJob = myJobs.find((job) => job._id === jobId);
+    const updatedJob = myJobs.find((job) => job.id === jobId);
     await axios
       .put(`http://localhost:4000/api/v1/job/update/${jobId}`, updatedJob, {
         withCredentials: true,
@@ -67,7 +67,7 @@ const MyJobs = () => {
       })
       .then((res) => {
         toast.success(res.data.message);
-        setMyJobs((prevJobs) => prevJobs.filter((job) => job._id !== jobId));
+        setMyJobs((prevJobs) => prevJobs.filter((job) => job.id !== jobId));
       })
       .catch((error) => {
         toast.error(error.response.data.message);
@@ -77,9 +77,7 @@ const MyJobs = () => {
   const handleInputChange = (jobId, field, value) => {
     // Update the job object in the jobs state with the new value
     setMyJobs((prevJobs) =>
-      prevJobs.map((job) =>
-        job._id === jobId ? { ...job, [field]: value } : job
-      )
+      prevJobs.map((job) => (job.id === jobId ? { ...job, [field]: value } : job))
     );
   };
 
@@ -92,7 +90,7 @@ const MyJobs = () => {
             <>
               <div className="banner">
                 {myJobs.map((element) => (
-                  <div className="card" key={element._id}>
+                  <div className="card" key={element.id}>
                     <div className="content">
                       <div className="short_fields">
                         <div>
@@ -100,12 +98,12 @@ const MyJobs = () => {
                           <input
                             type="text"
                             disabled={
-                              editingMode !== element._id ? true : false
+                              editingMode !== element.id ? true : false
                             }
                             value={element.title}
                             onChange={(e) =>
                               handleInputChange(
-                                element._id,
+                                element.id,
                                 "title",
                                 e.target.value
                               )
@@ -118,12 +116,12 @@ const MyJobs = () => {
                           <input
                             type="text"
                             disabled={
-                              editingMode !== element._id ? true : false
+                              editingMode !== element.id ? true : false
                             }
                             value={element.country}
                             onChange={(e) =>
                               handleInputChange(
-                                element._id,
+                                element.id,
                                 "country",
                                 e.target.value
                               )
@@ -135,12 +133,12 @@ const MyJobs = () => {
                           <input
                             type="text"
                             disabled={
-                              editingMode !== element._id ? true : false
+                              editingMode !== element.id ? true : false
                             }
                             value={element.city}
                             onChange={(e) =>
                               handleInputChange(
-                                element._id,
+                                element.id,
                                 "city",
                                 e.target.value
                               )
@@ -153,13 +151,13 @@ const MyJobs = () => {
                             value={element.category}
                             onChange={(e) =>
                               handleInputChange(
-                                element._id,
+                                element.id,
                                 "category",
                                 e.target.value
                               )
                             }
                             disabled={
-                              editingMode !== element._id ? true : false
+                              editingMode !== element.id ? true : false
                             }
                           >
                             <option value="Graphics & Design">
@@ -201,12 +199,12 @@ const MyJobs = () => {
                               <input
                                 type="number"
                                 disabled={
-                                  editingMode !== element._id ? true : false
+                                  editingMode !== element.id ? true : false
                                 }
                                 value={element.fixedSalary}
                                 onChange={(e) =>
                                   handleInputChange(
-                                    element._id,
+                                    element.id,
                                     "fixedSalary",
                                     e.target.value
                                   )
@@ -217,12 +215,12 @@ const MyJobs = () => {
                                 <input
                                   type="number"
                                   disabled={
-                                    editingMode !== element._id ? true : false
+                                  editingMode !== element.id ? true : false
                                   }
                                   value={element.salaryFrom}
                                   onChange={(e) =>
-                                    handleInputChange(
-                                      element._id,
+                                  handleInputChange(
+                                    element.id,
                                       "salaryFrom",
                                       e.target.value
                                     )
@@ -231,12 +229,12 @@ const MyJobs = () => {
                                 <input
                                   type="number"
                                   disabled={
-                                    editingMode !== element._id ? true : false
+                                  editingMode !== element.id ? true : false
                                   }
                                   value={element.salaryTo}
                                   onChange={(e) =>
-                                    handleInputChange(
-                                      element._id,
+                                  handleInputChange(
+                                    element.id,
                                       "salaryTo",
                                       e.target.value
                                     )
@@ -253,14 +251,12 @@ const MyJobs = () => {
                             value={element.expired}
                             onChange={(e) =>
                               handleInputChange(
-                                element._id,
+                                element.id,
                                 "expired",
                                 e.target.value
                               )
                             }
-                            disabled={
-                              editingMode !== element._id ? true : false
-                            }
+                            disabled={editingMode !== element.id ? true : false}
                           >
                             <option value={true}>TRUE</option>
                             <option value={false}>FALSE</option>
@@ -273,12 +269,10 @@ const MyJobs = () => {
                           <textarea
                             rows={5}
                             value={element.description}
-                            disabled={
-                              editingMode !== element._id ? true : false
-                            }
+                            disabled={editingMode !== element.id ? true : false}
                             onChange={(e) =>
                               handleInputChange(
-                                element._id,
+                                element.id,
                                 "description",
                                 e.target.value
                               )
@@ -290,12 +284,10 @@ const MyJobs = () => {
                           <textarea
                             value={element.location}
                             rows={5}
-                            disabled={
-                              editingMode !== element._id ? true : false
-                            }
+                            disabled={editingMode !== element.id ? true : false}
                             onChange={(e) =>
                               handleInputChange(
-                                element._id,
+                                element.id,
                                 "location",
                                 e.target.value
                               )
@@ -307,10 +299,10 @@ const MyJobs = () => {
                     {/* Out Of Content Class */}
                     <div className="button_wrapper">
                       <div className="edit_btn_wrapper">
-                        {editingMode === element._id ? (
+                        {editingMode === element.id ? (
                           <>
                             <button
-                              onClick={() => handleUpdateJob(element._id)}
+                              onClick={() => handleUpdateJob(element.id)}
                               className="check_btn"
                             >
                               <FaCheck />
@@ -324,7 +316,7 @@ const MyJobs = () => {
                           </>
                         ) : (
                           <button
-                            onClick={() => handleEnableEdit(element._id)}
+                            onClick={() => handleEnableEdit(element.id)}
                             className="edit_btn"
                           >
                             Edit
@@ -332,7 +324,7 @@ const MyJobs = () => {
                         )}
                       </div>
                       <button
-                        onClick={() => handleDeleteJob(element._id)}
+                        onClick={() => handleDeleteJob(element.id)}
                         className="delete_btn"
                       >
                         Delete

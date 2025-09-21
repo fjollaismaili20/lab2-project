@@ -234,7 +234,7 @@ const seedCompanies = async (client) => {
     return insertedCompanies;
 };
 
-const seedJobs = async (client, insertedUsers) => {
+const seedJobs = async (client, insertedUsers, insertedCompanies) => {
     console.log('Seeding jobs...');
     const insertedJobs = [];
     
@@ -244,11 +244,17 @@ const seedJobs = async (client, insertedUsers) => {
     for (let i = 0; i < seedData.jobs.length; i++) {
         const job = seedData.jobs[i];
         // Use actual employer IDs, cycling through available employers
-        const employerId = employers[i % employers.length].id;
+        const employer = employers[i % employers.length];
+        // Assign a company to employer if not already assigned (round-robin)
+        const company = insertedCompanies[i % insertedCompanies.length];
+        if (!employer.company_id) {
+            await client.query('UPDATE users SET company_id = $1 WHERE id = $2', [company.id, employer.id]);
+            employer.company_id = company.id;
+        }
         
         const result = await client.query(
-            'INSERT INTO jobs (title, description, category, country, city, location, fixed_salary, salary_from, salary_to, posted_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
-            [job.title, job.description, job.category, job.country, job.city, job.location, job.fixed_salary, job.salary_from, job.salary_to, employerId]
+            'INSERT INTO jobs (title, description, category, country, city, location, fixed_salary, salary_from, salary_to, company_id, posted_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+            [job.title, job.description, job.category, job.country, job.city, job.location, job.fixed_salary, job.salary_from, job.salary_to, employer.company_id, employer.id]
         );
         insertedJobs.push(result.rows[0]);
     }
@@ -304,7 +310,7 @@ export const seedDatabase = async () => {
             // Seed data in order (respecting foreign key dependencies)
             const insertedUsers = await seedUsers(client);
             const insertedCompanies = await seedCompanies(client);
-            const insertedJobs = await seedJobs(client, insertedUsers);
+            const insertedJobs = await seedJobs(client, insertedUsers, insertedCompanies);
             const insertedApplications = await seedApplications(client, insertedUsers, insertedJobs);
             
             // Commit transaction

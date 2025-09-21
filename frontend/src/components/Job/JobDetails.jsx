@@ -53,6 +53,16 @@ const JobDetails = () => {
           <p>
             Job Posted On: <span>{job.jobPostedOn}</span>
           </p>
+          {job.company && (
+            <>
+              <p>
+                Company: <span>{job.company.companyName}</span>
+              </p>
+              <p>
+                Company Address: <span>{job.company.address}</span>
+              </p>
+            </>
+          )}
           <p>
             Salary:{" "}
             {job.fixedSalary ? (
@@ -66,7 +76,7 @@ const JobDetails = () => {
           {user && user.role === "Employer" ? (
             <></>
           ) : (
-            <Link to={`/application/${job._id}`}>Apply Now</Link>
+            <Link to={`/application/${job.id}`}>Apply Now</Link>
           )}
         </div>
       </div>

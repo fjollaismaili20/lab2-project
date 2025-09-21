@@ -2,13 +2,34 @@ import { catchAsyncErrors } from "../middlewares/catchAsyncError.js";
 import { pool, jobQueries } from "../database/postgresSchemas.js";
 import ErrorHandler from "../middlewares/error.js";
 
+const mapJobRow = (row) => ({
+  id: row.id,
+  title: row.title,
+  description: row.description,
+  category: row.category,
+  country: row.country,
+  city: row.city,
+  location: row.location,
+  fixedSalary: row.fixed_salary,
+  salaryFrom: row.salary_from,
+  salaryTo: row.salary_to,
+  expired: row.expired,
+  jobPostedOn: row.job_posted_on,
+  postedBy: row.posted_by,
+  company: row.company_id ? {
+    id: row.company_id,
+    companyName: row.company_name,
+    address: row.company_address,
+  } : null,
+});
+
 export const getAllJobs = catchAsyncErrors(async (req, res, next) => {
   const client = await pool.connect();
   try {
     const result = await client.query(jobQueries.findAll);
     res.status(200).json({
       success: true,
-      jobs: result.rows,
+      jobs: result.rows.map(mapJobRow),
     });
   } catch (error) {
     console.error('Error fetching jobs:', error);
@@ -24,6 +45,9 @@ export const postJob = catchAsyncErrors(async (req, res, next) => {
     return next(
       new ErrorHandler("Job Seeker not allowed to access this resource.", 400)
     );
+  }
+  if (!req.user.company_id) {
+    return next(new ErrorHandler("Employer must be assigned to a company before posting jobs.", 400));
   }
   const {
     title,
@@ -56,17 +80,18 @@ export const postJob = catchAsyncErrors(async (req, res, next) => {
     );
   }
   const postedBy = req.user.id;
+  const companyId = req.user.company_id;
   const client = await pool.connect();
   try {
     const result = await client.query(jobQueries.insert, [
       title, description, category, country, city, location, 
-      fixedSalary, salaryFrom, salaryTo, postedBy
+      fixedSalary, salaryFrom, salaryTo, companyId, postedBy
     ]);
     
     res.status(200).json({
       success: true,
       message: "Job Posted Successfully!",
-      job: result.rows[0],
+      job: mapJobRow(result.rows[0]),
     });
   } catch (error) {
     console.error('Error posting job:', error);
@@ -89,7 +114,7 @@ export const getMyJobs = catchAsyncErrors(async (req, res, next) => {
     const result = await client.query(jobQueries.findByUserId, [req.user.id]);
     res.status(200).json({
       success: true,
-      myJobs: result.rows,
+      myJobs: result.rows.map(mapJobRow),
     });
   } catch (error) {
     console.error('Error fetching my jobs:', error);
@@ -126,7 +151,7 @@ export const updateJob = catchAsyncErrors(async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Job Updated!",
-      job: result.rows[0]
+      job: mapJobRow(result.rows[0])
     });
   } catch (error) {
     console.error('Error updating job:', error);
@@ -176,7 +201,7 @@ export const getSingleJob = catchAsyncErrors(async (req, res, next) => {
     }
     res.status(200).json({
       success: true,
-      job: result.rows[0],
+      job: mapJobRow(result.rows[0]),
     });
   } catch (error) {
     console.error('Error fetching job:', error);

@@ -21,6 +21,7 @@ export const userQueries = {
             phone BIGINT NOT NULL,
             password VARCHAR(255) NOT NULL,
             role VARCHAR(20) NOT NULL CHECK (role IN ('Job Seeker', 'Employer')),
+            company_id INTEGER REFERENCES companies(id) ON DELETE SET NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     `,
@@ -32,6 +33,7 @@ export const userQueries = {
     findByEmail: `SELECT * FROM users WHERE email = $1`,
     findById: `SELECT * FROM users WHERE id = $1`,
     update: `UPDATE users SET name = $1, email = $2, phone = $3, password = $4, role = $5 WHERE id = $6 RETURNING *`,
+    assignCompany: `UPDATE users SET company_id = $1 WHERE id = $2 RETURNING *`,
     delete: `DELETE FROM users WHERE id = $1`
 }
 
@@ -49,19 +51,37 @@ export const jobQueries = {
             fixed_salary INTEGER CHECK (fixed_salary >= 1000 AND fixed_salary <= 999999999),
             salary_from INTEGER CHECK (salary_from >= 1000 AND salary_from <= 999999999),
             salary_to INTEGER CHECK (salary_to >= 1000 AND salary_to <= 999999999),
+            company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
             expired BOOLEAN DEFAULT FALSE,
             job_posted_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             posted_by INTEGER REFERENCES users(id) ON DELETE CASCADE
         )
     `,
     insert: `
-        INSERT INTO jobs (title, description, category, country, city, location, fixed_salary, salary_from, salary_to, posted_by) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+        INSERT INTO jobs (title, description, category, country, city, location, fixed_salary, salary_from, salary_to, company_id, posted_by) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
         RETURNING *
     `,
-    findAll: `SELECT * FROM jobs WHERE expired = FALSE ORDER BY job_posted_on DESC`,
-    findById: `SELECT * FROM jobs WHERE id = $1`,
-    findByUserId: `SELECT * FROM jobs WHERE posted_by = $1 ORDER BY job_posted_on DESC`,
+    findAll: `
+        SELECT j.*, c.company_name, c.address AS company_address, c.id AS company_id 
+        FROM jobs j 
+        LEFT JOIN companies c ON j.company_id = c.id 
+        WHERE j.expired = FALSE 
+        ORDER BY j.job_posted_on DESC
+    `,
+    findById: `
+        SELECT j.*, c.company_name, c.address AS company_address, c.id AS company_id 
+        FROM jobs j 
+        LEFT JOIN companies c ON j.company_id = c.id 
+        WHERE j.id = $1
+    `,
+    findByUserId: `
+        SELECT j.*, c.company_name, c.address AS company_address, c.id AS company_id 
+        FROM jobs j 
+        LEFT JOIN companies c ON j.company_id = c.id 
+        WHERE j.posted_by = $1 
+        ORDER BY j.job_posted_on DESC
+    `,
     update: `UPDATE jobs SET title = $1, description = $2, category = $3, country = $4, city = $5, location = $6, fixed_salary = $7, salary_from = $8, salary_to = $9, expired = $10 WHERE id = $11 RETURNING *`,
     delete: `DELETE FROM jobs WHERE id = $1`
 }
@@ -139,10 +159,14 @@ export const initializeDatabase = async () => {
         const client = await pool.connect()
         
         // Create tables in order (respecting foreign key dependencies)
+        await client.query(companyQueries.create)
         await client.query(userQueries.create)
         await client.query(jobQueries.create)
         await client.query(applicationQueries.create)
-        await client.query(companyQueries.create)
+        
+        // Ensure new relationship columns exist when upgrading existing DBs
+        await client.query(`ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS company_id INTEGER REFERENCES companies(id) ON DELETE SET NULL`)
+        await client.query(`ALTER TABLE IF EXISTS jobs ADD COLUMN IF NOT EXISTS company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE`)
         
         console.log('PostgreSQL database tables created successfully')
         client.release()
