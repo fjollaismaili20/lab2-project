@@ -1,7 +1,12 @@
 import { catchAsyncErrors } from "../middlewares/catchAsyncError.js";
 import ErrorHandler from "../middlewares/error.js";
 import { pool, applicationQueries, jobQueries } from "../database/postgresSchemas.js";
-import cloudinary from "cloudinary";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const postApplication = catchAsyncErrors(async (req, res, next) => {
   const { role } = req.user;
@@ -15,22 +20,33 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
   }
 
   const { resume } = req.files;
-  const allowedFormats = ["image/png", "image/jpeg", "image/webp"];
+  const allowedFormats = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
   if (!allowedFormats.includes(resume.mimetype)) {
     return next(
-      new ErrorHandler("Invalid file type. Please upload a PNG file.", 400)
+      new ErrorHandler("Invalid file type. Please upload a PNG, JPEG, WEBP, or PDF file.", 400)
     );
   }
-  const cloudinaryResponse = await cloudinary.uploader.upload(
-    resume.tempFilePath
-  );
 
-  if (!cloudinaryResponse || cloudinaryResponse.error) {
-    console.error(
-      "Cloudinary Error:",
-      cloudinaryResponse.error || "Unknown Cloudinary error"
-    );
-    return next(new ErrorHandler("Failed to upload Resume to Cloudinary", 500));
+  // Generate unique filename
+  const timestamp = Date.now();
+  const originalExtension = path.extname(resume.name);
+  const filename = `resume_${timestamp}_${Math.random().toString(36).substring(2, 15)}${originalExtension}`;
+  
+  // Create uploads/resumes directory if it doesn't exist
+  const uploadsDir = path.join(__dirname, '..', 'uploads', 'resumes');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  
+  // Define file path
+  const filePath = path.join(uploadsDir, filename);
+  
+  try {
+    // Move file from temp location to uploads directory
+    await resume.mv(filePath);
+  } catch (error) {
+    console.error("File upload error:", error);
+    return next(new ErrorHandler("Failed to upload resume file", 500));
   }
   const { name, email, coverLetter, phone, address, jobId } = req.body;
   const applicantID = req.user.id;
@@ -59,9 +75,14 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
       return next(new ErrorHandler("Please fill all fields.", 400));
     }
     
+    // Store relative path for database and full path for local access
+    const relativePath = `uploads/resumes/${filename}`;
+    const fullPath = filePath;
+    
     const result = await client.query(applicationQueries.insert, [
       name, email, coverLetter, phone, address, 
-      cloudinaryResponse.public_id, cloudinaryResponse.secure_url,
+      filename, // Use filename as public_id equivalent
+      relativePath, // Store relative path as URL
       applicantID, employerID, jobId
     ]);
     

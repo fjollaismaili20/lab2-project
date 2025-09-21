@@ -51,7 +51,7 @@ const MyApplications = () => {
         .then((res) => {
           toast.success(res.data.message);
           setApplications((prevApplication) =>
-            prevApplication.filter((application) => application._id !== id)
+            prevApplication.filter((application) => application.id !== id)
           );
         });
     } catch (error) {
@@ -60,7 +60,11 @@ const MyApplications = () => {
   };
 
   const openModal = (imageUrl) => {
-    setResumeImageUrl(imageUrl);
+    // Prepend server URL if it's a relative path
+    const fullImageUrl = imageUrl.startsWith('http') 
+      ? imageUrl 
+      : `http://localhost:4000/${imageUrl}`;
+    setResumeImageUrl(fullImageUrl);
     setModalOpen(true);
   };
 
@@ -83,7 +87,7 @@ const MyApplications = () => {
               return (
                 <JobSeekerCard
                   element={element}
-                  key={element._id}
+                  key={element.id}
                   deleteApplication={deleteApplication}
                   openModal={openModal}
                 />
@@ -103,7 +107,7 @@ const MyApplications = () => {
               return (
                 <EmployerCard
                   element={element}
-                  key={element._id}
+                  key={element.id}
                   openModal={openModal}
                 />
               );
@@ -138,18 +142,20 @@ const JobSeekerCard = ({ element, deleteApplication, openModal }) => {
             <span>Address:</span> {element.address}
           </p>
           <p>
-            <span>CoverLetter:</span> {element.coverLetter}
+            <span>CoverLetter:</span> {element.cover_letter}
           </p>
         </div>
         <div className="resume">
           <img
-            src={element.resume.url}
+            src={element.resume_url.startsWith('http') 
+              ? element.resume_url 
+              : `http://localhost:4000/${element.resume_url}`}
             alt="resume"
-            onClick={() => openModal(element.resume.url)}
+            onClick={() => openModal(element.resume_url)}
           />
         </div>
         <div className="btn_area">
-          <button onClick={() => deleteApplication(element._id)}>
+          <button onClick={() => deleteApplication(element.id)}>
             Delete Application
           </button>
         </div>
@@ -176,14 +182,16 @@ const EmployerCard = ({ element, openModal }) => {
             <span>Address:</span> {element.address}
           </p>
           <p>
-            <span>CoverLetter:</span> {element.coverLetter}
+            <span>CoverLetter:</span> {element.cover_letter}
           </p>
         </div>
         <div className="resume">
           <img
-            src={element.resume.url}
+            src={element.resume_url.startsWith('http') 
+              ? element.resume_url 
+              : `http://localhost:4000/${element.resume_url}`}
             alt="resume"
-            onClick={() => openModal(element.resume.url)}
+            onClick={() => openModal(element.resume_url)}
           />
         </div>
       </div>

@@ -31,6 +31,9 @@ app.use(
     tempFileDir: "/tmp/",
   })
 );
+// Serve static files for uploads
+app.use('/uploads', express.static('uploads'));
+
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/job", jobRouter);
 app.use("/api/v1/application", applicationRouter);

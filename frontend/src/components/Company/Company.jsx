@@ -1,6 +1,7 @@
 // src/Company/Company.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
+import React from "react";
 
 const Company = () => {
   const [companies, setCompanies] = useState([]);
