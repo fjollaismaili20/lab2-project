@@ -20,6 +20,8 @@ const mapJobRow = (row) => ({
     id: row.company_id,
     companyName: row.company_name,
     address: row.company_address,
+    imageUrl: row.company_image_url,
+    imageFilename: row.company_image_filename,
   } : null,
 });
 
@@ -40,15 +42,18 @@ export const getAllJobs = catchAsyncErrors(async (req, res, next) => {
 });
 
 export const postJob = catchAsyncErrors(async (req, res, next) => {
+  console.log('Job posting request received:', {
+    user: req.user,
+    body: req.body
+  });
+  
   const { role } = req.user;
   if (role === "Job Seeker") {
     return next(
       new ErrorHandler("Job Seeker not allowed to access this resource.", 400)
     );
   }
-  if (!req.user.company_id) {
-    return next(new ErrorHandler("Employer must be assigned to a company before posting jobs.", 400));
-  }
+  
   const {
     title,
     description,
@@ -59,10 +64,15 @@ export const postJob = catchAsyncErrors(async (req, res, next) => {
     fixedSalary,
     salaryFrom,
     salaryTo,
+    companyId,
   } = req.body;
 
   if (!title || !description || !category || !country || !city || !location) {
     return next(new ErrorHandler("Please provide full job details.", 400));
+  }
+
+  if (!companyId) {
+    return next(new ErrorHandler("Please select a company for this job.", 400));
   }
 
   if ((!salaryFrom || !salaryTo) && !fixedSalary) {
@@ -79,23 +89,42 @@ export const postJob = catchAsyncErrors(async (req, res, next) => {
       new ErrorHandler("Cannot Enter Fixed and Ranged Salary together.", 400)
     );
   }
+  
   const postedBy = req.user.id;
-  const companyId = req.user.company_id;
   const client = await pool.connect();
   try {
+    console.log('Attempting to insert job with data:', {
+      title, description, category, country, city, location, 
+      fixedSalary, salaryFrom, salaryTo, companyId, postedBy
+    });
+
     const result = await client.query(jobQueries.insert, [
       title, description, category, country, city, location, 
       fixedSalary, salaryFrom, salaryTo, companyId, postedBy
     ]);
     
+    console.log('Job inserted successfully:', result.rows[0]);
+    
+    // Fetch the complete job data with company information
+    const jobId = result.rows[0].id;
+    console.log('Fetching complete job data for ID:', jobId);
+    
+    const completeJobResult = await client.query(jobQueries.findById, [jobId]);
+    console.log('Complete job data:', completeJobResult.rows[0]);
+    
     res.status(200).json({
       success: true,
       message: "Job Posted Successfully!",
-      job: mapJobRow(result.rows[0]),
+      job: mapJobRow(completeJobResult.rows[0]),
     });
   } catch (error) {
     console.error('Error posting job:', error);
-    return next(new ErrorHandler("Failed to post job", 500));
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
+    return next(new ErrorHandler(`Failed to post job: ${error.message}`, 500));
   } finally {
     client.release();
   }

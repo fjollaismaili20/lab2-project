@@ -273,7 +273,7 @@ const Blog = () => {
           </div>
         ) : (
           blogs.map((blog) => (
-            <div key={blog._id} className="blogItem">
+            <div key={blog._id} className="blogItem" onClick={() => navigateTo(`/blog/${blog._id}`)}>
               {/* Cover Image */}
               {blog.coverImage && blog.coverImage.url && (
                 <div className="blogCoverImage">
@@ -315,7 +315,7 @@ const Blog = () => {
               
               {/* Show edit/delete buttons only to Employers who own the blog */}
               {user?.role === "Employer" && blog.authorId === user.id.toString() && (
-                <div className="blogActions">
+                <div className="blogActions" onClick={(e) => e.stopPropagation()}>
                   <button className="editButton" onClick={() => startEdit(blog)}>
                     Edit
                   </button>

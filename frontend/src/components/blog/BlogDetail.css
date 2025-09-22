@@ -1,0 +1,323 @@
+/* Blog Detail Page Styles */
+.blogDetailContainer {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem 0;
+}
+
+.blogDetailContent {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.blogDetailHeader {
+  padding: 1.5rem 2rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.backToBlogsButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.backToBlogsButton:hover {
+  background: #667eea;
+  color: white;
+  transform: translateX(-2px);
+}
+
+.blogDetailCoverImage {
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+  position: relative;
+}
+
+.blogDetailCoverImage .coverImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.blogDetailCoverImage:hover .coverImage {
+  transform: scale(1.05);
+}
+
+.blogDetailHeaderContent {
+  padding: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.blogDetailTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.blogDetailMeta {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.blogDetailAuthor {
+  font-size: 1.1rem;
+  color: #667eea;
+  font-weight: 600;
+  background: #f0f4ff;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+}
+
+.blogDetailDate {
+  font-size: 1rem;
+  color: #6b7280;
+  background: #f9fafb;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+}
+
+.blogDetailContentText {
+  padding: 2rem;
+}
+
+.blogContent {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #374151;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.blogDetailAdditionalImages {
+  padding: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.blogDetailAdditionalImages h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+}
+
+.imageGallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.galleryImage {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.galleryImage:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.galleryImage .additionalImage {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.galleryImage:hover .additionalImage {
+  transform: scale(1.1);
+}
+
+.blogDetailActions {
+  padding: 2rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.editButton, .deleteButton {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.editButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.editButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.deleteButton {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.deleteButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+}
+
+.blogDetailAuthorInfo {
+  padding: 2rem;
+  background: #f8fafc;
+  border-top: 1px solid #e5e7eb;
+}
+
+.blogDetailAuthorInfo h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.blogDetailAuthorInfo p {
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.lastUpdated {
+  font-style: italic;
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+/* Loading Spinner */
+.loadingSpinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: white;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error Message */
+.errorMessage {
+  text-align: center;
+  color: white;
+  padding: 3rem;
+}
+
+.errorMessage h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.errorMessage p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .blogDetailContainer {
+    padding: 1rem 0;
+  }
+  
+  .blogDetailContent {
+    margin: 0 0.5rem;
+    border-radius: 10px;
+  }
+  
+  .blogDetailTitle {
+    font-size: 2rem;
+  }
+  
+  .blogDetailMeta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .blogDetailHeaderContent,
+  .blogDetailContentText,
+  .blogDetailAdditionalImages,
+  .blogDetailActions,
+  .blogDetailAuthorInfo {
+    padding: 1.5rem;
+  }
+  
+  .imageGallery {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .galleryImage .additionalImage {
+    height: 150px;
+  }
+  
+  .blogDetailActions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .editButton, .deleteButton {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .blogDetailTitle {
+    font-size: 1.5rem;
+  }
+  
+  .blogDetailCoverImage {
+    height: 250px;
+  }
+  
+  .blogContent {
+    font-size: 1rem;
+  }
+}

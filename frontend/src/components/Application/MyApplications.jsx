@@ -43,9 +43,12 @@ const MyApplications = () => {
     }
   }, [user, isAuthorized]);
 
-  if (!isAuthorized) {
-    navigateTo("/");
-  }
+  // Handle navigation in useEffect to avoid calling navigate during render
+  useEffect(() => {
+    if (!isAuthorized) {
+      navigateTo("/");
+    }
+  }, [isAuthorized, navigateTo]);
 
   const deleteApplication = (id) => {
     try {

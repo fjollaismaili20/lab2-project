@@ -1,0 +1,318 @@
+.companyContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+}
+
+.companyContainer h1 {
+  color: #333;
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 2.5rem;
+}
+
+.companyList {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.companyItem {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.companyItem:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.companyImageContainer {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.companyLogo {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid #667eea;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.companyInfo {
+  flex-grow: 1;
+  margin-bottom: 15px;
+}
+
+.companyName {
+  color: #333;
+  margin: 0 0 10px 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.companyAddress {
+  color: #666;
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+}
+
+.companyDescription {
+  color: #777;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.companyActions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.editButton, .deleteButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.editButton {
+  background-color: #667eea;
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #5a6fd8;
+  transform: translateY(-1px);
+}
+
+.deleteButton {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.deleteButton:hover {
+  background-color: #c0392b;
+  transform: translateY(-1px);
+}
+
+.addCompanyForm {
+  background: #f8f9fa;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.addCompanyForm h2 {
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1.8rem;
+}
+
+.addCompanyForm input,
+.addCompanyForm textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.addCompanyForm input:focus,
+.addCompanyForm textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.addCompanyForm textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.imageUploadSection {
+  margin-bottom: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  border: 2px dashed #e0e0e0;
+  text-align: center;
+  transition: border-color 0.3s ease;
+}
+
+.imageUploadSection:hover {
+  border-color: #667eea;
+}
+
+.imageUploadLabel {
+  display: block;
+  margin-bottom: 10px;
+  color: #333;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.imageInput {
+  margin-bottom: 15px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+}
+
+.imagePreview {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.previewImage {
+  max-width: 150px;
+  max-height: 150px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+}
+
+.removeImageBtn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.removeImageBtn:hover {
+  background-color: #c0392b;
+}
+
+.addButton {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.addButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.addButton:active {
+  transform: translateY(0);
+}
+
+.formButtons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.updateButton, .cancelButton {
+  flex: 1;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.updateButton {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.updateButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.cancelButton {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+}
+
+.cancelButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+}
+
+.currentImagePreview {
+  margin-top: 15px;
+  text-align: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.currentImagePreview p {
+  margin: 0 0 10px 0;
+  color: #666;
+  font-weight: 500;
+}
+
+.no-companies {
+  text-align: center;
+  padding: 40px 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.no-companies p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .companyList {
+    grid-template-columns: 1fr;
+  }
+  
+  .companyContainer {
+    padding: 10px;
+  }
+  
+  .addCompanyForm {
+    padding: 20px;
+  }
+}

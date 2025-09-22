@@ -8,7 +8,7 @@ import { errorMiddleware } from "./middlewares/error.js";
 import cookieParser from "cookie-parser";
 import fileUpload from "express-fileupload";
 import blogRouter from "./routes/blogRoutes.js"; 
-
+import companyRouter from "./routes/companyRoutes.js";
 
 const app = express();
 config({ path: "./config/config.env" });
@@ -38,6 +38,7 @@ app.use("/api/v1/user", userRouter);
 app.use("/api/v1/job", jobRouter);
 app.use("/api/v1/application", applicationRouter);
 app.use("/api/v1/blogs", blogRouter);
+app.use("/api/v1/companies", companyRouter);
 
 app.use(errorMiddleware);
 export default app;

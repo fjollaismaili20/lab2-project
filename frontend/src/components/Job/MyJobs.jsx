@@ -91,7 +91,21 @@ const MyJobs = () => {
               <div className="banner">
                 {myJobs.map((element) => (
                   <div className="card" key={element.id}>
+                    {element.company && element.company.imageUrl && (
+                      <div className="company-image-container">
+                        <img 
+                          src={`http://localhost:4000/${element.company.imageUrl}`} 
+                          alt={element.company.companyName}
+                          className="company-cover-image"
+                        />
+                      </div>
+                    )}
                     <div className="content">
+                      {element.company && (
+                        <div className="company-info">
+                          <span>Company: {element.company.companyName}</span>
+                        </div>
+                      )}
                       <div className="short_fields">
                         <div>
                           <span>Title:</span>

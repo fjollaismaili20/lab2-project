@@ -17,6 +17,7 @@ import PostJob from "./components/Job/PostJob";
 import NotFound from "./components/NotFound/NotFound";
 import MyJobs from "./components/Job/MyJobs";
 import Blog from "./components/blog/Blog";
+import BlogDetail from "./components/blog/BlogDetail";
 import Company from "./components/Company/Company";
 
 const App = () => {
@@ -37,7 +38,7 @@ const App = () => {
       }
     };
     fetchUser();
-  }, [isAuthorized]);
+  }, []); // Remove isAuthorized from dependency array to prevent infinite loop
 
   return (
     <>
@@ -55,6 +56,7 @@ const App = () => {
           <Route path="/job/me" element={<MyJobs />} />
           <Route path="*" element={<NotFound />} />
           <Route path="/blogs" element={<Blog />} />
+          <Route path="/blog/:id" element={<BlogDetail />} />
           <Route path="/companies" element={<Company />} />
         </Routes>
         <Footer />

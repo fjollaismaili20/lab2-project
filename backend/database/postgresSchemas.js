@@ -63,20 +63,23 @@ export const jobQueries = {
         RETURNING *
     `,
     findAll: `
-        SELECT j.*, c.company_name, c.address AS company_address, c.id AS company_id 
+        SELECT j.*, c.company_name, c.address AS company_address, c.id AS company_id, 
+               c.company_image_url, c.company_image_filename
         FROM jobs j 
         LEFT JOIN companies c ON j.company_id = c.id 
         WHERE j.expired = FALSE 
         ORDER BY j.job_posted_on DESC
     `,
     findById: `
-        SELECT j.*, c.company_name, c.address AS company_address, c.id AS company_id 
+        SELECT j.*, c.company_name, c.address AS company_address, c.id AS company_id,
+               c.company_image_url, c.company_image_filename
         FROM jobs j 
         LEFT JOIN companies c ON j.company_id = c.id 
         WHERE j.id = $1
     `,
     findByUserId: `
-        SELECT j.*, c.company_name, c.address AS company_address, c.id AS company_id 
+        SELECT j.*, c.company_name, c.address AS company_address, c.id AS company_id,
+               c.company_image_url, c.company_image_filename
         FROM jobs j 
         LEFT JOIN companies c ON j.company_id = c.id 
         WHERE j.posted_by = $1 
@@ -138,18 +141,20 @@ export const companyQueries = {
             company_name VARCHAR(255) NOT NULL,
             address TEXT,
             description TEXT,
+            company_image_filename VARCHAR(255),
+            company_image_url VARCHAR(500),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     `,
     insert: `
-        INSERT INTO companies (company_id, company_name, address, description) 
-        VALUES ($1, $2, $3, $4) 
+        INSERT INTO companies (company_id, company_name, address, description, company_image_filename, company_image_url) 
+        VALUES ($1, $2, $3, $4, $5, $6) 
         RETURNING *
     `,
     findAll: `SELECT * FROM companies ORDER BY created_at DESC`,
     findById: `SELECT * FROM companies WHERE id = $1`,
-    update: `UPDATE companies SET company_id = $1, company_name = $2, address = $3, description = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING *`,
+    update: `UPDATE companies SET company_id = $1, company_name = $2, address = $3, description = $4, company_image_filename = $5, company_image_url = $6, updated_at = CURRENT_TIMESTAMP WHERE id = $7 RETURNING *`,
     delete: `DELETE FROM companies WHERE id = $1`
 }
 
@@ -167,6 +172,10 @@ export const initializeDatabase = async () => {
         // Ensure new relationship columns exist when upgrading existing DBs
         await client.query(`ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS company_id INTEGER REFERENCES companies(id) ON DELETE SET NULL`)
         await client.query(`ALTER TABLE IF EXISTS jobs ADD COLUMN IF NOT EXISTS company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE`)
+        
+        // Add image columns to companies table if they don't exist
+        await client.query(`ALTER TABLE IF EXISTS companies ADD COLUMN IF NOT EXISTS company_image_filename VARCHAR(255)`)
+        await client.query(`ALTER TABLE IF EXISTS companies ADD COLUMN IF NOT EXISTS company_image_url VARCHAR(500)`)
         
         console.log('PostgreSQL database tables created successfully')
         client.release()

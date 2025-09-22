@@ -5,8 +5,19 @@ import jwt from "jsonwebtoken";
 
 export const isAuthenticated = catchAsyncErrors(async (req, res, next) => {
   const { token } = req.cookies;
+  console.log('Authentication check:', { token: token ? 'present' : 'missing' });
+  
   if (!token) {
+    console.log('No token found, returning 401');
     return next(new ErrorHandler("User Not Authorized", 401));
+  }
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    console.log('Token decoded successfully:', { id: decoded.id });
+  } catch (jwtError) {
+    console.log('JWT verification failed:', jwtError.message);
+    return next(new ErrorHandler("Invalid token", 401));
   }
   
   const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);

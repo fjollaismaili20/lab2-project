@@ -583,6 +583,68 @@ p {
   display: block;
   text-align: center;
 }
+
+/* Company image styles for job cards */
+.jobs .container .banner .card .company-image-container {
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.jobs .container .banner .card .company-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.jobs .container .banner .card .job-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.jobs .container .banner .card .job-content h3 {
+  font-weight: bold;
+  font-size: 1.4rem;
+  margin: 0;
+  color: #333;
+}
+
+.jobs .container .banner .card .job-content .category {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+.jobs .container .banner .card .job-content .location {
+  font-size: 1rem;
+  color: #888;
+  margin: 0;
+}
+
+.jobs .container .banner .card .job-content .company-name {
+  font-size: 0.9rem;
+  color: #2d5649;
+  font-weight: 500;
+  margin: 0;
+}
+
+.jobs .container .banner .card .job-content .job-details-link {
+  text-decoration: none;
+  padding: 7px;
+  font-size: 16px;
+  color: #2d5649;
+  background: rgb(233, 249, 255);
+  width: 100%;
+  display: block;
+  text-align: center;
+  border-radius: 4px;
+  margin-top: auto;
+}
 @media (max-width: 1520px) {
   .jobs .container {
     min-width: 100%;
@@ -638,6 +700,28 @@ p {
   text-decoration: none;
   margin-top: 10px;
   width: fit-content;
+}
+
+/* Company image styles for job details */
+.jobDetail .container .banner .company-image-section {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 30px auto;
+  text-align: center;
+}
+
+.jobDetail .container .banner .company-detail-image {
+  width: 100%;
+  max-width: 300px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border: 3px solid #2d5649;
+}
+
+.jobDetail .container .banner .job-details-content {
+  width: 100%;
 }
 @media (max-width: 1520px) {
   .jobDetail .container {
@@ -948,6 +1032,37 @@ p {
   font-size: 20px;
   margin-right: 6px;
   font-weight: bold;
+}
+
+/* Company image styles for MyJobs */
+.myJobs .container .banner .card .company-image-container {
+  width: 120px;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.myJobs .container .banner .card .company-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.myJobs .container .banner .card .company-info {
+  margin-bottom: 10px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #2d5649;
+}
+
+.myJobs .container .banner .card .company-info span {
+  font-size: 16px;
+  color: #2d5649;
+  font-weight: 600;
 }
 .myJobs .container .banner .card .content input,
 .myJobs .container .banner .card .content select {

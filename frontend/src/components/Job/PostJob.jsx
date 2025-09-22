@@ -14,14 +14,37 @@ const PostJob = () => {
   const [salaryTo, setSalaryTo] = useState("");
   const [fixedSalary, setFixedSalary] = useState("");
   const [salaryType, setSalaryType] = useState("default");
+  const [companyId, setCompanyId] = useState("");
+  const [companies, setCompanies] = useState([]);
 
   const { isAuthorized, user } = useContext(Context);
 
+  // Fetch companies on component mount
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const response = await axios.get("http://localhost:4000/api/v1/companies");
+        setCompanies(response.data.companies || []);
+      } catch (error) {
+        console.error("Error fetching companies:", error);
+        toast.error("Failed to load companies");
+        setCompanies([]); // Set empty array on error
+      }
+    };
+    fetchCompanies();
+  }, []);
+
   const handleJobPost = async (e) => {
     e.preventDefault();
+    
+    if (!companyId) {
+      toast.error("Please select a company for this job");
+      return;
+    }
+    
     if (salaryType === "Fixed Salary") {
       setSalaryFrom("");
-      setSalaryFrom("");
+      setSalaryTo("");
     } else if (salaryType === "Ranged Salary") {
       setFixedSalary("");
     } else {
@@ -29,29 +52,28 @@ const PostJob = () => {
       setSalaryTo("");
       setFixedSalary("");
     }
+    
+    const jobData = {
+      title,
+      description,
+      category,
+      country,
+      city,
+      location,
+      companyId,
+    };
+    
+    if (salaryType === "Fixed Salary" && fixedSalary.length >= 4) {
+      jobData.fixedSalary = fixedSalary;
+    } else if (salaryType === "Ranged Salary") {
+      jobData.salaryFrom = salaryFrom;
+      jobData.salaryTo = salaryTo;
+    }
+    
     await axios
       .post(
         "http://localhost:4000/api/v1/job/post",
-        fixedSalary.length >= 4
-          ? {
-              title,
-              description,
-              category,
-              country,
-              city,
-              location,
-              fixedSalary,
-            }
-          : {
-              title,
-              description,
-              category,
-              country,
-              city,
-              location,
-              salaryFrom,
-              salaryTo,
-            },
+        jobData,
         {
           withCredentials: true,
           headers: {
@@ -61,16 +83,40 @@ const PostJob = () => {
       )
       .then((res) => {
         toast.success(res.data.message);
+        // Reset form
+        setTitle("");
+        setDescription("");
+        setCategory("");
+        setCountry("");
+        setCity("");
+        setLocation("");
+        setSalaryFrom("");
+        setSalaryTo("");
+        setFixedSalary("");
+        setSalaryType("default");
+        setCompanyId("");
       })
       .catch((err) => {
-        toast.error(err.response.data.message);
+        console.error("Job posting error:", err);
+        if (err.response?.status === 401) {
+          toast.error("Please log in to post a job");
+          navigateTo("/login");
+        } else {
+          toast.error(err.response?.data?.message || "Failed to post job");
+        }
       });
   };
 
   const navigateTo = useNavigate();
-  if (!isAuthorized || (user && user.role !== "Employer")) {
-    navigateTo("/");
-  }
+  
+  // Handle navigation in useEffect to avoid calling navigate during render
+  useEffect(() => {
+    if (!isAuthorized) {
+      navigateTo("/login");
+    } else if (user && user.role !== "Employer") {
+      navigateTo("/");
+    }
+  }, [isAuthorized, user, navigateTo]);
 
   return (
     <>
@@ -113,6 +159,20 @@ const PostJob = () => {
                    Computer network
                 </option>
                 <option value="Data Entry Operator">Data Entry Operator</option>
+              </select>
+            </div>
+            <div className="wrapper">
+              <select
+                value={companyId}
+                onChange={(e) => setCompanyId(e.target.value)}
+                required
+              >
+                <option value="">Select Company *</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.company_name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="wrapper">
