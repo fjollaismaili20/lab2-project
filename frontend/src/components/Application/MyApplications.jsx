@@ -43,12 +43,9 @@ const MyApplications = () => {
     }
   }, [user, isAuthorized]);
 
-  // Handle navigation in useEffect to avoid calling navigate during render
-  useEffect(() => {
-    if (!isAuthorized) {
-      navigateTo("/");
-    }
-  }, [isAuthorized, navigateTo]);
+  if (!isAuthorized) {
+    navigateTo("/");
+  }
 
   const deleteApplication = (id) => {
     try {
@@ -144,10 +141,9 @@ const MyApplications = () => {
         <div className="container">
           <h1>My Applications</h1>
           {applications.length <= 0 ? (
-            <>
-              {" "}
-              <h4>No Applications Found</h4>{" "}
-            </>
+            <div className="no-applications">
+              <h4>No Applications Found</h4>
+            </div>
           ) : (
             applications.map((element) => {
               return (
@@ -165,9 +161,9 @@ const MyApplications = () => {
         <div className="container">
           <h1>Applications From Job Seekers</h1>
           {applications.length <= 0 ? (
-            <>
+            <div className="no-applications">
               <h4>No Applications Found</h4>
-            </>
+            </div>
           ) : (
             applications.map((element) => {
               return (

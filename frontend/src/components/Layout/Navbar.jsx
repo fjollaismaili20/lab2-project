@@ -3,12 +3,37 @@ import { Context } from "../../main";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { GiHamburgerMenu } from "react-icons/gi";
 
 const Navbar = () => {
   const [show, setShow] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const { isAuthorized, setIsAuthorized, user } = useContext(Context);
   const navigateTo = useNavigate();
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Handle click outside to close user dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showUserMenu && !event.target.closest('.user-menu')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
+
 
   const handleLogout = async () => {
     try {
@@ -27,64 +52,185 @@ const Navbar = () => {
   };
 
   return (
-    <nav className={isAuthorized ? "navbarShow" : "navbarHide"}>
-      <div className="container">
-        <div className="logo">
-          <img src="/logo.png" alt="logo" />
+    <nav className={`modern-navbar ${isAuthorized ? "navbarShow" : "navbarHide"} ${isScrolled ? "scrolled" : ""}`}>
+      <div className="navbar-container">
+        {/* Logo Section */}
+        <div className="navbar-logo">
+          <Link to="/" className="logo-link">
+            <span className="logo-text">JobPortal</span>
+          </Link>
         </div>
-        <ul className={!show ? "menu" : "show-menu menu"}>
-          <li>
-            <Link to={"/"} onClick={() => setShow(false)}>
-              HOME
-            </Link>
-          </li>
-          <li>
-            <Link to={"/job/getall"} onClick={() => setShow(false)}>
-              ALL JOBS
-            </Link>
-          </li>
-          <li>
-            <Link to={"/applications/me"} onClick={() => setShow(false)}>
-              {user && user.role === "Employer"
-                ? "APPLICATIONS"
-                : "MY APPLICATIONS"}
-            </Link>
-          </li>
-          {user && user.role === "Employer" ? (
-            <>
-              <li>
-                <Link to={"/job/post"} onClick={() => setShow(false)}>
-                  POST NEW JOB
-                </Link>
-              </li>
-              <li>
-                <Link to={"/job/me"} onClick={() => setShow(false)}>
-                  VIEW YOUR JOBS
-                </Link>
-              </li>
-              <li>
-                <Link to={"/reports"} onClick={() => setShow(false)}>
-                  REPORTS
-                </Link>
-              </li>
-            </>
-          ) : (
-            <></>
-          )}
-          <li>
-  <Link to={"/blogs"} onClick={() => setShow(false)}>
-    BLOGS
-  </Link>
-</li>
 
-<li>
-  <Link to={"/companies"}>COMPANIES</Link>
-</li>
+        {/* Desktop Navigation */}
+        <div className="navbar-menu">
+          <ul className="nav-links">
+            <li className="nav-item">
+              <Link to="/" className="nav-link" onClick={() => setShow(false)}>
+                <span>Home</span>
+              </Link>
+            </li>
+            
+            <li className="nav-item">
+              <Link to="/job/getall" className="nav-link" onClick={() => setShow(false)}>
+                <span>Jobs</span>
+              </Link>
+            </li>
 
-          <button onClick={handleLogout}>LOGOUT</button>
-        </ul>
-        <div className="hamburger">
-          <GiHamburgerMenu onClick={() => setShow(!show)} />
+            {user && user.role === "Employer" && (
+              <>
+                <li className="nav-item">
+                  <Link to="/job/post" className="nav-link" onClick={() => setShow(false)}>
+                    <span>Post Job</span>
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link to="/job/me" className="nav-link" onClick={() => setShow(false)}>
+                    <span>My Jobs</span>
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link to="/applications/me" className="nav-link" onClick={() => setShow(false)}>
+                    <span>Applications</span>
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link to="/reports" className="nav-link" onClick={() => setShow(false)}>
+                    <span>Reports</span>
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link to="/companies" className="nav-link" onClick={() => setShow(false)}>
+                    <span>Companies</span>
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link to="/blogs" className="nav-link" onClick={() => setShow(false)}>
+                    <span>Blogs</span>
+                  </Link>
+                </li>
+              </>
+            )}
+
+            {user && user.role !== "Employer" && (
+              <li className="nav-item">
+                <Link to="/applications/me" className="nav-link" onClick={() => setShow(false)}>
+                  <span>My Applications</span>
+                </Link>
+              </li>
+            )}
+          </ul>
+        </div>
+
+
+        {/* User Menu */}
+        <div className="navbar-user">
+          <div className="user-menu">
+            <div 
+              className="user-info"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+            >
+              <div className="user-avatar">
+                <span>👤</span>
+              </div>
+              <div className="user-details">
+                <span className="user-name">{user?.name || "User"}</span>
+                <span className="user-role">{user?.role || "Guest"}</span>
+              </div>
+              <span className={`dropdown-icon ${showUserMenu ? 'rotated' : ''}`}>▼</span>
+            </div>
+            
+            <div 
+              className={`user-dropdown ${showUserMenu ? 'show' : ''}`}
+            >
+              <div className="dropdown-item">
+                <span>Profile</span>
+              </div>
+              <div className="dropdown-item" onClick={handleLogout}>
+                <span>Logout</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu Button */}
+        <div className="mobile-menu-btn" onClick={() => setShow(!show)}>
+          <span className={`hamburger-text ${show ? 'active' : ''}`}>☰</span>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      <div className={`mobile-menu ${show ? 'show' : ''}`}>
+        <div className="mobile-menu-content">
+          <div className="mobile-user-info">
+            <div className="mobile-user-avatar">
+              <span>👤</span>
+            </div>
+            <div className="mobile-user-details">
+              <span className="mobile-user-name">{user?.name || "User"}</span>
+              <span className="mobile-user-role">{user?.role || "Guest"}</span>
+            </div>
+          </div>
+          
+          <ul className="mobile-nav-links">
+            <li className="mobile-nav-item">
+              <Link to="/" className="mobile-nav-link" onClick={() => setShow(false)}>
+                <span>Home</span>
+              </Link>
+            </li>
+            
+            <li className="mobile-nav-item">
+              <Link to="/job/getall" className="mobile-nav-link" onClick={() => setShow(false)}>
+                <span>Jobs</span>
+              </Link>
+            </li>
+
+            {user && user.role === "Employer" ? (
+              <>
+                <li className="mobile-nav-item">
+                  <Link to="/job/post" className="mobile-nav-link" onClick={() => setShow(false)}>
+                    <span>Post Job</span>
+                  </Link>
+                </li>
+                <li className="mobile-nav-item">
+                  <Link to="/job/me" className="mobile-nav-link" onClick={() => setShow(false)}>
+                    <span>My Jobs</span>
+                  </Link>
+                </li>
+                <li className="mobile-nav-item">
+                  <Link to="/applications/me" className="mobile-nav-link" onClick={() => setShow(false)}>
+                    <span>Applications</span>
+                  </Link>
+                </li>
+                <li className="mobile-nav-item">
+                  <Link to="/reports" className="mobile-nav-link" onClick={() => setShow(false)}>
+                    <span>Reports</span>
+                  </Link>
+                </li>
+                <li className="mobile-nav-item">
+                  <Link to="/companies" className="mobile-nav-link" onClick={() => setShow(false)}>
+                    <span>Companies</span>
+                  </Link>
+                </li>
+                <li className="mobile-nav-item">
+                  <Link to="/blogs" className="mobile-nav-link" onClick={() => setShow(false)}>
+                    <span>Blogs</span>
+                  </Link>
+                </li>
+              </>
+            ) : (
+              <li className="mobile-nav-item">
+                <Link to="/applications/me" className="mobile-nav-link" onClick={() => setShow(false)}>
+                  <span>My Applications</span>
+                </Link>
+              </li>
+            )}
+            
+            <li className="mobile-nav-item">
+              <button className="mobile-logout-btn" onClick={handleLogout}>
+                <span>Logout</span>
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
     </nav>
