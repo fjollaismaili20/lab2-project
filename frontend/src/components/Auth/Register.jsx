@@ -37,6 +37,7 @@ const Register = () => {
       setPassword("");
       setPhone("");
       setRole("");
+      setUser(data.user); // Store user data including role
       setIsAuthorized(true);
     } catch (error) {
       toast.error(error.response.data.message);

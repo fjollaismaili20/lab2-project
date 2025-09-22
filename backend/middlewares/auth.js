@@ -38,3 +38,16 @@ export const isAuthenticated = catchAsyncErrors(async (req, res, next) => {
     client.release();
   }
 });
+
+// Middleware to check if user is an Employer
+export const isEmployer = catchAsyncErrors(async (req, res, next) => {
+  if (!req.user) {
+    return next(new ErrorHandler("User not authenticated", 401));
+  }
+  
+  if (req.user.role !== 'Employer') {
+    return next(new ErrorHandler("Access denied. Only employers can perform this action.", 403));
+  }
+  
+  next();
+});

@@ -1,11 +1,13 @@
 // src/Company/Company.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import React from "react";
 import toast from "react-hot-toast";
+import { Context } from "../../main";
 import "./Company.css";
 
 const Company = () => {
+  const { user } = useContext(Context);
   const [companies, setCompanies] = useState([]);
   const [newCompany, setNewCompany] = useState({
     CompanyID: "",
@@ -17,6 +19,9 @@ const Company = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [editingCompany, setEditingCompany] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Check if user is an employer
+  const isEmployer = user && user.role === 'Employer';
 
   // Merr të gjitha kompanitë
   useEffect(() => {
@@ -187,6 +192,11 @@ const Company = () => {
   return (
     <div className="companyContainer">
       <h1>Company List</h1>
+      {!isEmployer && user && (
+        <div className="info-message">
+          <p>As a Job Seeker, you can view companies but cannot create, edit, or delete them.</p>
+        </div>
+      )}
       <ul className="companyList">
         {companies && companies.length > 0 ? companies.map((company) => (
           <li key={company.id} className="companyItem">
@@ -204,20 +214,22 @@ const Company = () => {
               <p className="companyAddress">{company.address}</p>
               <p className="companyDescription">{company.description}</p>
             </div>
-            <div className="companyActions">
-              <button
-                className="editButton"
-                onClick={() => startEditCompany(company)}
-              >
-                Edit
-              </button>
-              <button
-                className="deleteButton"
-                onClick={() => deleteCompany(company.id)}
-              >
-                Delete
-              </button>
-            </div>
+            {isEmployer && (
+              <div className="companyActions">
+                <button
+                  className="editButton"
+                  onClick={() => startEditCompany(company)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="deleteButton"
+                  onClick={() => deleteCompany(company.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
           </li>
         )) : (
           <li className="no-companies">
@@ -226,8 +238,10 @@ const Company = () => {
         )}
       </ul>
 
-      <h2>{isEditing ? 'Edit Company' : 'Add New Company'}</h2>
-      <div className="addCompanyForm">
+      {isEmployer && (
+        <>
+          <h2>{isEditing ? 'Edit Company' : 'Add New Company'}</h2>
+          <div className="addCompanyForm">
         <input
           type="text"
           value={newCompany.CompanyID}
@@ -309,6 +323,8 @@ const Company = () => {
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

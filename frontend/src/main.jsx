@@ -4,6 +4,9 @@ import App from "./App.jsx";
 
 export const Context = createContext({
   isAuthorized: false,
+  user: {},
+  setUser: () => {},
+  setIsAuthorized: () => {},
 });
 
 const AppWrapper = () => {

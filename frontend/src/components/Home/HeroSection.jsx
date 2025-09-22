@@ -41,6 +41,7 @@ const HeroSection = () => {
           <div className="image">
             <img src="/Search-Job.png" alt="hero" />
           </div>
+
         </div>
         <div className="details">
           {details.map((element) => {
@@ -61,3 +62,4 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
+
