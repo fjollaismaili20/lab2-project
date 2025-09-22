@@ -37,19 +37,55 @@ const PostJob = () => {
   const handleJobPost = async (e) => {
     e.preventDefault();
     
+    // Validate required fields
+    if (!title || !description || !category || !country || !city || !location) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    
+    // Validate field lengths according to database constraints
+    if (title.length < 3 || title.length > 30) {
+      toast.error("Job title must be between 3 and 30 characters");
+      return;
+    }
+    
+    if (description.length < 30 || description.length > 500) {
+      toast.error("Job description must be between 30 and 500 characters");
+      return;
+    }
+    
+    if (location.length < 20) {
+      toast.error("Location must be at least 20 characters long");
+      return;
+    }
+    
     if (!companyId) {
       toast.error("Please select a company for this job");
       return;
     }
     
+    if (salaryType === "default") {
+      toast.error("Please select a salary type");
+      return;
+    }
+    
+    // Validate salary fields based on type
     if (salaryType === "Fixed Salary") {
+      if (!fixedSalary || fixedSalary < 1000) {
+        toast.error("Please enter a valid fixed salary (minimum 1000)");
+        return;
+      }
       setSalaryFrom("");
       setSalaryTo("");
     } else if (salaryType === "Ranged Salary") {
-      setFixedSalary("");
-    } else {
-      setSalaryFrom("");
-      setSalaryTo("");
+      if (!salaryFrom || !salaryTo || salaryFrom < 1000 || salaryTo < 1000) {
+        toast.error("Please enter valid salary range (minimum 1000)");
+        return;
+      }
+      if (parseInt(salaryFrom) >= parseInt(salaryTo)) {
+        toast.error("Salary 'From' must be less than 'To'");
+        return;
+      }
       setFixedSalary("");
     }
     
@@ -63,11 +99,11 @@ const PostJob = () => {
       companyId,
     };
     
-    if (salaryType === "Fixed Salary" && fixedSalary.length >= 4) {
-      jobData.fixedSalary = fixedSalary;
+    if (salaryType === "Fixed Salary") {
+      jobData.fixedSalary = parseInt(fixedSalary);
     } else if (salaryType === "Ranged Salary") {
-      jobData.salaryFrom = salaryFrom;
-      jobData.salaryTo = salaryTo;
+      jobData.salaryFrom = parseInt(salaryFrom);
+      jobData.salaryTo = parseInt(salaryTo);
     }
     
     await axios
@@ -193,7 +229,7 @@ const PostJob = () => {
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Location"
+              placeholder="Location (minimum 20 characters)"
             />
             <div className="salary_wrapper">
               <select
@@ -236,7 +272,7 @@ const PostJob = () => {
               rows="10"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Job Description"
+              placeholder="Job Description (minimum 30 characters, maximum 500 characters)"
             />
             <button type="submit">Create Job</button>
           </form>

@@ -43,8 +43,9 @@ export const getAllJobs = catchAsyncErrors(async (req, res, next) => {
 
 export const postJob = catchAsyncErrors(async (req, res, next) => {
   console.log('Job posting request received:', {
-    user: req.user,
-    body: req.body
+    user: req.user ? { id: req.user.id, role: req.user.role } : 'No user',
+    body: req.body,
+    headers: req.headers
   });
   
   const { role } = req.user;
