@@ -2,7 +2,7 @@ import { catchAsyncErrors } from "../middlewares/catchAsyncError.js";
 import { pool, applicationQueries, jobQueries, userQueries } from "../database/postgresSchemas.js";
 import ErrorHandler from "../middlewares/error.js";
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 // Get application statistics for reports
@@ -472,7 +472,10 @@ export const exportReportPDF = catchAsyncErrors(async (req, res, next) => {
           jobs_with_applications: 0,
           total_jobs: 0,
           avg_applications_per_job: 0
-        }
+        },
+        jobStats: [],
+        categoryStats: [],
+        companyStats: []
       };
     }
 
@@ -507,7 +510,7 @@ export const exportReportPDF = catchAsyncErrors(async (req, res, next) => {
         new Date(app.application_date).toLocaleDateString()
       ]);
 
-      doc.autoTable({
+      autoTable(doc, {
         head: [['Applicant Name', 'Email', 'Job Title', 'Company', 'Category', 'Application Date']],
         body: tableData,
         startY: yPosition,
@@ -546,7 +549,7 @@ export const exportReportPDF = catchAsyncErrors(async (req, res, next) => {
           trend.unique_applicants
         ]);
 
-        doc.autoTable({
+        autoTable(doc, {
           head: [['Period', 'Applications', 'Unique Jobs', 'Unique Applicants']],
           body: trendsData,
           startY: yPosition,
@@ -561,7 +564,9 @@ export const exportReportPDF = catchAsyncErrors(async (req, res, next) => {
     res.setHeader('Content-Disposition', `attachment; filename="job-report-${Date.now()}.pdf"`);
     
     // Send PDF
-    res.send(doc.output('arraybuffer'));
+    const pdfBuffer = doc.output('arraybuffer');
+    res.setHeader('Content-Length', pdfBuffer.byteLength);
+    res.send(Buffer.from(pdfBuffer));
 
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -721,7 +726,10 @@ export const exportReportExcel = catchAsyncErrors(async (req, res, next) => {
           jobs_with_applications: 0,
           total_jobs: 0,
           avg_applications_per_job: 0
-        }
+        },
+        jobStats: [],
+        categoryStats: [],
+        companyStats: []
       };
     }
 
@@ -767,19 +775,19 @@ export const exportReportExcel = catchAsyncErrors(async (req, res, next) => {
       }
 
       // Job statistics sheet
-      if (reportData.jobStats.length > 0) {
+      if (reportData.jobStats && reportData.jobStats.length > 0) {
         const jobStatsSheet = XLSX.utils.json_to_sheet(reportData.jobStats);
         XLSX.utils.book_append_sheet(workbook, jobStatsSheet, 'Job Statistics');
       }
 
       // Category statistics sheet
-      if (reportData.categoryStats.length > 0) {
+      if (reportData.categoryStats && reportData.categoryStats.length > 0) {
         const categoryStatsSheet = XLSX.utils.json_to_sheet(reportData.categoryStats);
         XLSX.utils.book_append_sheet(workbook, categoryStatsSheet, 'Category Statistics');
       }
 
       // Company statistics sheet
-      if (reportData.companyStats.length > 0) {
+      if (reportData.companyStats && reportData.companyStats.length > 0) {
         const companyStatsSheet = XLSX.utils.json_to_sheet(reportData.companyStats);
         XLSX.utils.book_append_sheet(workbook, companyStatsSheet, 'Company Statistics');
       }
