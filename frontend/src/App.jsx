@@ -19,6 +19,7 @@ import MyJobs from "./components/Job/MyJobs";
 import Blog from "./components/blog/Blog";
 import BlogDetail from "./components/blog/BlogDetail";
 import Company from "./components/Company/Company";
+import ReportDashboard from "./components/Reports/ReportDashboard";
 
 const App = () => {
   const { isAuthorized, setIsAuthorized, setUser } = useContext(Context);
@@ -58,6 +59,7 @@ const App = () => {
           <Route path="/blogs" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogDetail />} />
           <Route path="/companies" element={<Company />} />
+          <Route path="/reports" element={<ReportDashboard />} />
         </Routes>
         <Footer />
         <Toaster />

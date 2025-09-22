@@ -41,6 +41,107 @@ export const getAllJobs = catchAsyncErrors(async (req, res, next) => {
   }
 });
 
+export const searchJobs = catchAsyncErrors(async (req, res, next) => {
+  const client = await pool.connect();
+  try {
+    const { 
+      search, 
+      category, 
+      company, 
+      country, 
+      salaryMin, 
+      salaryMax,
+      salaryType 
+    } = req.query;
+
+    let query = jobQueries.findAll;
+    const conditions = [];
+    const values = [];
+    let paramCount = 0;
+
+    // Add search term (searches in title, description, and company name)
+    if (search) {
+      paramCount++;
+      conditions.push(`(
+        j.title ILIKE $${paramCount} OR 
+        j.description ILIKE $${paramCount} OR 
+        c.company_name ILIKE $${paramCount}
+      )`);
+      values.push(`%${search}%`);
+    }
+
+    // Add category filter
+    if (category) {
+      paramCount++;
+      conditions.push(`j.category = $${paramCount}`);
+      values.push(category);
+    }
+
+    // Add company filter
+    if (company) {
+      paramCount++;
+      conditions.push(`c.company_name ILIKE $${paramCount}`);
+      values.push(`%${company}%`);
+    }
+
+    // Add country filter
+    if (country) {
+      paramCount++;
+      conditions.push(`j.country ILIKE $${paramCount}`);
+      values.push(`%${country}%`);
+    }
+
+    // Add salary range filter
+    if (salaryMin || salaryMax) {
+      if (salaryType === 'fixed') {
+        if (salaryMin) {
+          paramCount++;
+          conditions.push(`j.fixed_salary >= $${paramCount}`);
+          values.push(parseInt(salaryMin));
+        }
+        if (salaryMax) {
+          paramCount++;
+          conditions.push(`j.fixed_salary <= $${paramCount}`);
+          values.push(parseInt(salaryMax));
+        }
+      } else {
+        // For ranged salary, check if the range overlaps with the filter range
+        if (salaryMin) {
+          paramCount++;
+          conditions.push(`(j.salary_from >= $${paramCount} OR j.salary_to >= $${paramCount})`);
+          values.push(parseInt(salaryMin));
+        }
+        if (salaryMax) {
+          paramCount++;
+          conditions.push(`(j.salary_from <= $${paramCount} OR j.salary_to <= $${paramCount})`);
+          values.push(parseInt(salaryMax));
+        }
+      }
+    }
+
+    // Build the final query
+    if (conditions.length > 0) {
+      query = query.replace('WHERE j.expired = FALSE', `WHERE j.expired = FALSE AND ${conditions.join(' AND ')}`);
+    }
+
+    console.log('Search query:', query);
+    console.log('Search values:', values);
+
+    const result = await client.query(query, values);
+    
+    res.status(200).json({
+      success: true,
+      jobs: result.rows.map(mapJobRow),
+      total: result.rows.length
+    });
+  } catch (error) {
+    console.error('Error searching jobs:', error);
+    return next(new ErrorHandler("Failed to search jobs", 500));
+  } finally {
+    client.release();
+  }
+});
+
 export const postJob = catchAsyncErrors(async (req, res, next) => {
   console.log('Job posting request received:', {
     user: req.user ? { id: req.user.id, role: req.user.role } : 'No user',

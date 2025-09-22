@@ -5,6 +5,7 @@ import {
   getMyJobs,
   getSingleJob,
   postJob,
+  searchJobs,
   updateJob,
 } from "../controllers/jobController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
@@ -12,6 +13,7 @@ import { isAuthenticated } from "../middlewares/auth.js";
 const router = express.Router();
 
 router.get("/getall", getAllJobs);
+router.get("/search", searchJobs);
 router.post("/post", isAuthenticated, postJob);
 router.get("/getmyjobs", isAuthenticated, getMyJobs);
 router.put("/update/:id", isAuthenticated, updateJob);

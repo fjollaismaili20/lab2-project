@@ -25,11 +25,14 @@
     "express": "^4.19.2",
     "express-fileupload": "^1.4.3",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "mongoose": "^8.4.3",
     "mysql": "^2.18.1",
     "mysql2": "^3.10.1",
     "pdf2pic": "^3.2.0",
     "pg": "^8.16.3",
-    "validator": "^13.11.0"
+    "validator": "^13.11.0",
+    "xlsx": "^0.18.5"
   }
 }
