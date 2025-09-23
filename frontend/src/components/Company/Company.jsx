@@ -25,8 +25,8 @@ const Company = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [showCompanyModal, setShowCompanyModal] = useState(false);
 
-  // Check if user is an employer
-  const isEmployer = user && user.role === 'Employer';
+  // Check if user is an employer or employee (both can manage companies)
+  const canManageCompanies = user && (user.role === 'Employer' || user.role === 'Employee');
 
   // Merr të gjitha kompanitë
   useEffect(() => {
@@ -91,7 +91,8 @@ const Company = () => {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-          }
+          },
+          withCredentials: true,
         }
       );
       
@@ -120,7 +121,9 @@ const Company = () => {
     }
     
     try {
-      await axios.delete(`http://localhost:4000/api/v1/companies/${id}`);
+      await axios.delete(`http://localhost:4000/api/v1/companies/${id}`, {
+        withCredentials: true,
+      });
       setCompanies(companies.filter((company) => company.id !== id));
       toast.success("Company deleted successfully!");
     } catch (error) {
@@ -183,7 +186,8 @@ const Company = () => {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-          }
+          },
+          withCredentials: true,
         }
       );
       
@@ -251,14 +255,14 @@ const Company = () => {
             <span className="stat-label">With Logo</span>
           </div>
           <div className="stat-item">
-            <span className="stat-number">{isEmployer ? 'Admin' : 'Viewer'}</span>
+            <span className="stat-number">{canManageCompanies ? 'Manager' : 'Viewer'}</span>
             <span className="stat-label">Access Level</span>
           </div>
         </div>
       </div>
 
       {/* Info Message for Job Seekers */}
-      {!isEmployer && user && (
+      {!canManageCompanies && user && (
         <div className="info-message">
           <FaInfoCircle className="info-icon" />
           <p>As a Job Seeker, you can view companies but cannot create, edit, or delete them.</p>
@@ -295,8 +299,8 @@ const Company = () => {
                 <p className="company-id">ID: {company.company_id}</p>
               </div>
 
-              {/* Action Buttons (only for employers) */}
-              {isEmployer && (
+              {/* Action Buttons (only for managers) */}
+              {canManageCompanies && (
                 <div className="company-actions" onClick={(e) => e.stopPropagation()}>
                   <button
                     className="action-btn edit-btn"
@@ -326,11 +330,11 @@ const Company = () => {
             <div className="empty-icon">🏢</div>
             <h3>No companies found</h3>
             <p>
-              {isEmployer 
+              {canManageCompanies 
                 ? "You haven't added any companies yet. Create your first company profile!"
                 : "No companies are available at the moment."}
             </p>
-            {isEmployer && (
+            {canManageCompanies && (
               <button className="create-company-btn" onClick={() => setIsEditing(false)}>
                 <FaPlus className="btn-icon" />
                 Add Your First Company
@@ -341,7 +345,7 @@ const Company = () => {
       </div>
 
       {/* Add/Edit Company Form */}
-      {isEmployer && (
+      {canManageCompanies && (
         <div className="company-form-container">
           <div className="form-header">
             <h2 className="form-title">
@@ -560,7 +564,7 @@ const Company = () => {
               </div>
 
               {/* Modal Actions */}
-              {isEmployer && (
+              {canManageCompanies && (
                 <div className="modal-actions">
                   <button
                     className="modal-action-btn edit-btn"

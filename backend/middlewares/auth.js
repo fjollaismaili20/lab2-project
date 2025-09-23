@@ -39,14 +39,14 @@ export const isAuthenticated = catchAsyncErrors(async (req, res, next) => {
   }
 });
 
-// Middleware to check if user is an Employer
+// Middleware to check if user is an Employer or Employee (both can manage companies)
 export const isEmployer = catchAsyncErrors(async (req, res, next) => {
   if (!req.user) {
     return next(new ErrorHandler("User not authenticated", 401));
   }
   
-  if (req.user.role !== 'Employer') {
-    return next(new ErrorHandler("Access denied. Only employers can perform this action.", 403));
+  if (req.user.role !== 'Employer' && req.user.role !== 'Employee') {
+    return next(new ErrorHandler("Access denied. Only employers and employees can perform this action.", 403));
   }
   
   next();

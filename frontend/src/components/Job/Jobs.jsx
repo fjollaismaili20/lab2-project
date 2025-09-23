@@ -148,66 +148,69 @@ const Jobs = () => {
         ) : displayJobs && displayJobs.length > 0 ? (
           displayJobs.map((job) => (
             <article key={job.id} className="job-card">
-              {/* Company Image */}
-              {job.company && job.company.imageUrl && (
-                <div className="job-card-image">
-                  <img 
-                    src={`http://localhost:4000/${job.company.imageUrl}`} 
-                    alt={job.company.companyName}
-                    className="card-company-image"
-                  />
-                  <div className="job-card-overlay">
-                    <span className="view-details">Click to view details →</span>
+              {/* Card Header with Company Info */}
+              <div className="job-card-header">
+                {job.company && job.company.imageUrl ? (
+                  <div className="company-logo">
+                    <img 
+                      src={`http://localhost:4000/${job.company.imageUrl}`} 
+                      alt={job.company.companyName}
+                      className="company-logo-img"
+                    />
                   </div>
-                  
-                  {/* Image Title and Description */}
-                  <div className="image-content">
-                    <h3 className="image-title">{job.company.companyName}</h3>
-                    <p className="image-description">Leading company in {job.category}</p>
+                ) : (
+                  <div className="company-logo-placeholder">
+                    <span className="company-initial">
+                      {job.company?.companyName?.charAt(0) || '?'}
+                    </span>
                   </div>
-                </div>
-              )}
-              
-              <div className="job-card-content">
-                <div className="job-card-meta">
-                  <span className="job-category">
-                    <span className="category-icon">💼</span>
-                    {job.category}
-                  </span>
-                  <span className="job-location">
-                    📍 {job.country}, {job.city}
-                  </span>
-                </div>
-                
-                <h2 className="job-card-title">{job.title}</h2>
-                
-                {job.company && (
-                  <p className="job-company">
-                    <span className="company-icon">🏢</span>
-                    {job.company.companyName}
-                  </p>
                 )}
                 
-                <div className="job-salary">
-                  {job.fixedSalary ? (
-                    <span className="salary-amount">
-                      💰 ${job.fixedSalary.toLocaleString()}
-                    </span>
-                  ) : job.salaryFrom && job.salaryTo ? (
-                    <span className="salary-amount">
-                      💰 ${job.salaryFrom.toLocaleString()} - ${job.salaryTo.toLocaleString()}
-                    </span>
-                  ) : (
-                    <span className="salary-amount">💰 Salary not specified</span>
-                  )}
+                <div className="company-info">
+                  <h3 className="company-name">{job.company?.companyName || 'Unknown Company'}</h3>
+                  <div className="job-meta">
+                    <span className="job-category">{job.category}</span>
+                    <span className="job-location">📍 {job.city}, {job.country}</span>
+                  </div>
                 </div>
+              </div>
+              
+              {/* Card Body */}
+              <div className="job-card-body">
+                <h2 className="job-title">{job.title}</h2>
                 
-                <div className="job-card-footer">
-                  <Link to={`/job/${job.id}`} className="job-details-link">
-                    View Details
-                  </Link>
-                  <span className="job-type">Full-time</span>
+                <div className="job-details">
+                  <div className="salary-info">
+                    {job.fixedSalary ? (
+                      <span className="salary">
+                        <span className="salary-icon">💰</span>
+                        ${job.fixedSalary.toLocaleString()}
+                      </span>
+                    ) : job.salaryFrom && job.salaryTo ? (
+                      <span className="salary">
+                        <span className="salary-icon">💰</span>
+                        ${job.salaryFrom.toLocaleString()} - ${job.salaryTo.toLocaleString()}
+                      </span>
+                    ) : (
+                      <span className="salary">
+                        <span className="salary-icon">💰</span>
+                        Salary not specified
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="job-type-badge">
+                    <span className="type-text">Full-time</span>
+                  </div>
                 </div>
+              </div>
+              
+              {/* Card Footer */}
+              <div className="job-card-footer">
+                <Link to={`/job/${job.id}`} className="view-details-btn">
+                  View Details
+                  <span className="btn-arrow">→</span>
+                </Link>
               </div>
             </article>
           ))
