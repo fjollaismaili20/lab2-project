@@ -43,7 +43,7 @@ const BlogDetail = () => {
       return;
     }
 
-    if (blog.authorId !== user.id.toString()) {
+    if (blog.authorId !== user.id.toString() && blog.authorId !== user.id) {
       toast.error("You can only delete your own blogs");
       return;
     }
@@ -87,93 +87,103 @@ const BlogDetail = () => {
   }
 
   return (
-    <div className="blogDetailContainer">
-      <div className="blogDetailContent">
-        {/* Back to Blogs Button */}
-        <div className="blogDetailHeader">
-          <Link to="/blogs" className="backToBlogsButton">
-            ← Back to Blogs
-          </Link>
-        </div>
+    <div className="modern-blog-detail-container">
+      {/* Back Navigation */}
+      <div className="blog-detail-nav">
+        <Link to="/blogs" className="back-to-blogs-btn">
+          ← Back to Blogs
+        </Link>
+      </div>
 
-        {/* Cover Image */}
+      {/* Main Blog Card */}
+      <article className="modern-blog-detail-card">
+        {/* Cover Image with Overlay */}
         {blog.coverImage && blog.coverImage.url && (
-          <div className="blogDetailCoverImage">
+          <div className="blog-detail-image">
             <img 
               src={`http://localhost:4000/${blog.coverImage.url}`} 
               alt={blog.title}
-              className="coverImage"
+              className="blog-detail-cover-image"
             />
+            <div className="blog-detail-overlay">
+              <div className="blog-detail-meta-overlay">
+                <div className="author-info">
+                  <div className="author-avatar">👤</div>
+                  <span className="author-name">{blog.author}</span>
+                </div>
+                <div className="blog-date">
+                  {new Date(blog.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons - Top Right */}
+            {user?.role === "Employer" && (blog.authorId === user.id.toString() || blog.authorId === user.id) && (
+              <div className="blog-detail-actions-top">
+                <button 
+                  className="blog-detail-edit-btn"
+                  onClick={() => navigateTo(`/blogs?edit=${blog._id}`)}
+                  title="Edit Blog"
+                >
+                  ✏️
+                </button>
+                <button 
+                  className="blog-detail-delete-btn"
+                  onClick={deleteBlog}
+                  title="Delete Blog"
+                >
+                  🗑️
+                </button>
+              </div>
+            )}
           </div>
         )}
-
-        {/* Blog Header */}
-        <div className="blogDetailHeaderContent">
-          <h1 className="blogDetailTitle">{blog.title}</h1>
-          <div className="blogDetailMeta">
-            <span className="blogDetailAuthor">By: {blog.author}</span>
-            <span className="blogDetailDate">
-              {new Date(blog.createdAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </span>
-          </div>
-        </div>
 
         {/* Blog Content */}
-        <div className="blogDetailContentText">
-          <p className="blogContent">{blog.content}</p>
-        </div>
+        <div className="blog-detail-content">
+          <h1 className="blog-detail-title">{blog.title}</h1>
+          
+          <div className="blog-detail-body">
+            <p className="blog-detail-text">{blog.content}</p>
+          </div>
 
-        {/* Additional Images Gallery */}
-        {blog.additionalImages && blog.additionalImages.length > 0 && (
-          <div className="blogDetailAdditionalImages">
-            <h3>Gallery</h3>
-            <div className="imageGallery">
-              {blog.additionalImages.map((image, index) => (
-                <div key={index} className="galleryImage">
-                  <img 
-                    src={`http://localhost:4000/${image.url}`} 
-                    alt={`Blog image ${index + 1}`}
-                    className="additionalImage"
-                  />
-                </div>
-              ))}
+          {/* Additional Images Gallery */}
+          {blog.additionalImages && blog.additionalImages.length > 0 && (
+            <div className="blog-detail-gallery">
+              <h3 className="gallery-title">Gallery</h3>
+              <div className="gallery-grid">
+                {blog.additionalImages.map((image, index) => (
+                  <div key={index} className="gallery-item">
+                    <img 
+                      src={`http://localhost:4000/${image.url}`} 
+                      alt={`Blog image ${index + 1}`}
+                      className="gallery-image"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Action Buttons - Only for blog author */}
-        {user?.role === "Employer" && blog.authorId === user.id.toString() && (
-          <div className="blogDetailActions">
-            <button 
-              className="editButton" 
-              onClick={() => navigateTo(`/blogs/edit/${blog._id}`)}
-            >
-              Edit Blog
-            </button>
-            <button 
-              className="deleteButton" 
-              onClick={deleteBlog}
-            >
-              Delete Blog
-            </button>
-          </div>
-        )}
-
-        {/* Author Info */}
-        <div className="blogDetailAuthorInfo">
-          <h3>About the Author</h3>
-          <p>This blog was written by <strong>{blog.author}</strong> on {new Date(blog.createdAt).toLocaleDateString()}.</p>
-          {blog.updatedAt && blog.updatedAt !== blog.createdAt && (
-            <p className="lastUpdated">
-              Last updated: {new Date(blog.updatedAt).toLocaleDateString()}
-            </p>
           )}
+
+          {/* Blog Footer */}
+          <div className="blog-detail-footer">
+            <div className="read-info">
+              <span className="read-time">5 min read</span>
+              <span className="blog-category">Company News</span>
+            </div>
+            
+            {blog.updatedAt && blog.updatedAt !== blog.createdAt && (
+              <div className="last-updated">
+                Last updated: {new Date(blog.updatedAt).toLocaleDateString()}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </article>
     </div>
   );
 };

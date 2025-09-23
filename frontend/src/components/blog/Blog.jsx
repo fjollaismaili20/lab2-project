@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Context } from '../../main';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import './Blog.css'; 
 
 const Blog = () => {
@@ -12,26 +12,82 @@ const Blog = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [additionalImages, setAdditionalImages] = useState([]);
   const [additionalImagePreviews, setAdditionalImagePreviews] = useState([]);
-  const [isEditing, setIsEditing] = useState(false); 
+  const [isEditing, setIsEditing] = useState(false);
   const [editBlogId, setEditBlogId] = useState(null);
+  const [showActionsForBlog, setShowActionsForBlog] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const blogsPerPage = 6;
   
   const { isAuthorized, user } = useContext(Context);
-  const navigateTo = useNavigate(); 
+  const navigateTo = useNavigate();
+  const [searchParams] = useSearchParams(); 
 
   
   useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const response = await axios.get("http://localhost:4000/api/v1/blogs");
-        setBlogs(response.data.blogs || []);
-      } catch (error) {
-        console.error("Error fetching blogs:", error);
-        toast.error("Failed to fetch blogs");
-      }
-    };
-
     fetchBlogs();
-  }, []);
+  }, [currentPage]);
+
+  const fetchBlogs = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`http://localhost:4000/api/v1/blogs?page=${currentPage}&limit=${blogsPerPage}`);
+      setBlogs(response.data.blogs || []);
+      setTotalPages(response.data.totalPages || 1);
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+      toast.error("Failed to fetch blogs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Debug user data
+  useEffect(() => {
+    console.log("User data:", user);
+    console.log("User role:", user?.role);
+    console.log("User ID:", user?.id);
+  }, [user]);
+
+  // Define startEdit function first
+  const startEdit = (blog) => {
+    if (user?.role !== "Employer") {
+      toast.error("Only Employers can edit blogs");
+      return;
+    }
+    
+    // Check if user is the author of the blog
+    if (blog.authorId !== user.id.toString() && blog.authorId !== user.id) {
+      toast.error("You can only edit your own blogs");
+      return;
+    }
+    
+    setIsEditing(true); 
+    setEditBlogId(blog._id); 
+    setNewBlog({ title: blog.title, content: blog.content });
+    
+    // Set existing cover image preview if available
+    if (blog.coverImage && blog.coverImage.url) {
+      setImagePreview(`http://localhost:4000/${blog.coverImage.url}`);
+    } else {
+      setImagePreview(null);
+    }
+    setCoverImage(null); // Reset file input
+  };
+
+  // Handle edit parameter from URL
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (editId && blogs.length > 0) {
+      const blogToEdit = blogs.find(blog => blog._id === editId);
+      if (blogToEdit) {
+        startEdit(blogToEdit);
+        // Clear the URL parameter
+        navigateTo('/blogs', { replace: true });
+      }
+    }
+  }, [searchParams, blogs, navigateTo, user]);
 
   // Redirect if not authorized
   if (!isAuthorized) {
@@ -222,31 +278,6 @@ const Blog = () => {
     }
   };
 
-  
-  const startEdit = (blog) => {
-    if (user?.role !== "Employer") {
-      toast.error("Only Employers can edit blogs");
-      return;
-    }
-    
-    // Check if user is the author of the blog
-    if (blog.authorId !== user.id.toString()) {
-      toast.error("You can only edit your own blogs");
-      return;
-    }
-    
-    setIsEditing(true); 
-    setEditBlogId(blog._id); 
-    setNewBlog({ title: blog.title, content: blog.content });
-    
-    // Set existing cover image preview if available
-    if (blog.coverImage && blog.coverImage.url) {
-      setImagePreview(`http://localhost:4000/${blog.coverImage.url}`);
-    } else {
-      setImagePreview(null);
-    }
-    setCoverImage(null); // Reset file input
-  };
 
   const cancelEdit = () => {
     setIsEditing(false);
@@ -258,95 +289,230 @@ const Blog = () => {
     setAdditionalImagePreviews([]);
   };
 
+  // Handle blog card click to show/hide actions
+  const handleBlogCardClick = (blogId, event) => {
+    // Check if click was on action buttons or their container
+    if (event.target.closest('.blog-card-actions-top')) {
+      return; // Don't navigate if clicking on action buttons
+    }
+    
+    if (showActionsForBlog === blogId) {
+      setShowActionsForBlog(null); // Hide if already showing
+    } else {
+      setShowActionsForBlog(blogId); // Show for this blog
+    }
+  };
+
+  // Handle double click to navigate to blog detail
+  const handleBlogDoubleClick = (blogId) => {
+    navigateTo(`/blog/${blogId}`);
+  };
+
+  // Pagination functions
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    setShowActionsForBlog(null); // Hide any open action menus
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      setShowActionsForBlog(null);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      setShowActionsForBlog(null);
+    }
+  };
+
   return (
-    <div className="blogContainer">
-      <h1>Company Blogs</h1>
+    <div className="modern-blog-container">
+      {/* Header Section */}
+      <div className="blog-header">
+        <h1 className="blog-main-title">Company Blog</h1>
+        <p className="blog-subtitle">Insights, updates, and stories from our team</p>
+      </div>
       
-      {/* Blog List */}
-      <div className="blogList">
-        {blogs.length === 0 ? (
-          <div className="noBlogsMessage">
-            <h3>No blogs available yet.</h3>
+      {/* Blog Grid */}
+      <div className="blog-grid">
+        {loading ? (
+          <div className="blog-loading">
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <p>Loading blogs...</p>
+            </div>
+          </div>
+        ) : blogs.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">📝</div>
+            <h3>No blogs yet</h3>
+            <p>Be the first to share your thoughts and insights!</p>
             {user?.role === "Employer" && (
-              <p>Be the first to share your thoughts!</p>
+              <button 
+                className="create-first-blog-btn"
+                onClick={() => {
+                  const formSection = document.querySelector('.blog-form-section');
+                  formSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                Create First Blog
+              </button>
             )}
           </div>
         ) : (
           blogs.map((blog) => (
-            <div key={blog._id} className="blogItem" onClick={() => navigateTo(`/blog/${blog._id}`)}>
+            <article 
+              key={blog._id} 
+              className="blog-card" 
+              onClick={(e) => handleBlogCardClick(blog._id, e)}
+              onDoubleClick={() => handleBlogDoubleClick(blog._id)}
+            >
               {/* Cover Image */}
               {blog.coverImage && blog.coverImage.url && (
-                <div className="blogCoverImage">
+                <div className="blog-card-image">
                   <img 
                     src={`http://localhost:4000/${blog.coverImage.url}`} 
                     alt={blog.title}
-                    className="coverImage"
+                    className="card-cover-image"
                   />
+                  <div className="blog-card-overlay">
+                    <span className="read-more">Double-click to read more →</span>
+                  </div>
+                  
+                  {/* Edit and Delete Buttons - Top Right Corner */}
+                  {user?.role === "Employer" && (blog.authorId === user.id.toString() || blog.authorId === user.id) && showActionsForBlog === blog._id && (
+                    <div className="blog-card-actions-top" onClick={(e) => e.stopPropagation()}>
+                      <button 
+                        className="blog-edit-btn-small"
+                        onClick={() => startEdit(blog)}
+                        title="Edit Blog"
+                      >
+                        ✏️
+                      </button>
+                      <button 
+                        className="blog-delete-btn-small"
+                        onClick={() => deleteBlog(blog._id)}
+                        title="Delete Blog"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
               
-              <div className="blogHeader">
-                <h2 className="blogTitle">{blog.title}</h2>
-                <div className="blogMeta">
-                  <span className="blogAuthor">By: {blog.author}</span>
-                  <span className="blogDate">
-                    {new Date(blog.createdAt).toLocaleDateString()}
+              <div className="blog-card-content">
+                <div className="blog-card-meta">
+                  <span className="blog-author">
+                    <span className="author-avatar">👤</span>
+                    {blog.author}
+                  </span>
+                  <span className="blog-date">
+                    {new Date(blog.createdAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
                   </span>
                 </div>
-              </div>
-              <p className="blogContent">{blog.content}</p>
-              
-              {/* Additional Images Gallery */}
-              {blog.additionalImages && blog.additionalImages.length > 0 && (
-                <div className="blogAdditionalImages">
-                  <div className="imageGallery">
-                    {blog.additionalImages.map((image, index) => (
-                      <div key={index} className="galleryImage">
-                        <img 
-                          src={`http://localhost:4000/${image.url}`} 
-                          alt={`Blog image ${index + 1}`}
-                          className="additionalImage"
-                        />
-                      </div>
-                    ))}
+                
+                <h2 className="blog-card-title">{blog.title}</h2>
+                <p className="blog-card-excerpt">
+                  {blog.content.length > 150 
+                    ? `${blog.content.substring(0, 150)}...` 
+                    : blog.content
+                  }
+                </p>
+                
+                <div className="blog-card-footer">
+                  <span className="read-time">5 min read</span>
+                  <span className="blog-category">Company News</span>
+                </div>
+                
+                {/* Debug info - remove this later */}
+                <div style={{fontSize: '10px', color: '#666', margin: '5px 0'}}>
+                  Debug: User role: {user?.role}, User ID: {user?.id}, Blog authorId: {blog.authorId}
+                </div>
+                
+                {/* Instructions for user */}
+                {user?.role === "Employer" && (blog.authorId === user.id.toString() || blog.authorId === user.id) && (
+                  <div style={{fontSize: '12px', color: '#666', margin: '5px 0', fontStyle: 'italic'}}>
+                    Click to show actions • Double-click to read
                   </div>
-                </div>
-              )}
-              
-              {/* Show edit/delete buttons only to Employers who own the blog */}
-              {user?.role === "Employer" && blog.authorId === user.id.toString() && (
-                <div className="blogActions" onClick={(e) => e.stopPropagation()}>
-                  <button className="editButton" onClick={() => startEdit(blog)}>
-                    Edit
-                  </button>
-                  <button className="deleteButton" onClick={() => deleteBlog(blog._id)}>
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
+                )}
+                
+              </div>
+            </article>
           ))
         )}
       </div>
 
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="blog-pagination">
+          <div className="pagination-info">
+            <span>Page {currentPage} of {totalPages}</span>
+          </div>
+          
+          <div className="pagination-controls">
+            <button 
+              className="pagination-btn prev-btn"
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+            >
+              ← Previous
+            </button>
+            
+            <div className="pagination-numbers">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                  onClick={() => handlePageChange(page)}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            
+            <button 
+              className="pagination-btn next-btn"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Blog Creation Form - Only for Employers */}
       {user?.role === "Employer" && (
-        <div className="blogFormSection">
-          <h2>{isEditing ? "Edit Blog" : "Create New Blog"}</h2>
-          <div className="addBlogForm">
-            <input
-              type="text"
-              value={newBlog.title}
-              onChange={(e) => setNewBlog({ ...newBlog, title: e.target.value })}
-              placeholder="Blog Title"
-              className="blogTitleInput"
-            />
+        <div className="blog-form-section">
+          <div className="form-header">
+            <h2>{isEditing ? "Edit Blog Post" : "Create New Blog Post"}</h2>
+            <p>Share your insights and updates with the team</p>
+          </div>
+          
+          <form className="modern-blog-form" onSubmit={(e) => { e.preventDefault(); saveBlog(); }}>
+            <div className="form-group">
+              <label className="form-label">Blog Title</label>
+              <input
+                type="text"
+                value={newBlog.title}
+                onChange={(e) => setNewBlog({ ...newBlog, title: e.target.value })}
+                placeholder="Enter an engaging title..."
+                className="form-input"
+                required
+              />
+            </div>
             
             {/* Cover Image Upload Section */}
-            <div className="imageUploadSection">
-              <label className="imageUploadLabel">
-                Cover Image (Optional)
-              </label>
+            <div className="form-group">
+              <label className="form-label">Cover Image (Optional)</label>
               
               {imagePreview ? (
                 <div className="imagePreview">
@@ -434,32 +600,38 @@ const Blog = () => {
               )}
             </div>
 
-            <textarea
-              value={newBlog.content}
-              onChange={(e) => setNewBlog({ ...newBlog, content: e.target.value })}
-              placeholder="Write your blog content here..."
-              className="blogContentInput"
-              rows="6"
-            ></textarea>
+            <div className="form-group">
+              <label className="form-label">Blog Content</label>
+              <textarea
+                value={newBlog.content}
+                onChange={(e) => setNewBlog({ ...newBlog, content: e.target.value })}
+                placeholder="Share your thoughts, insights, and updates..."
+                className="form-textarea"
+                rows="8"
+                required
+              ></textarea>
+            </div>
             
-            <div className="formButtons">
-              <button className="addButton" onClick={saveBlog}>
-                {isEditing ? "Update Blog" : "Publish Blog"} 
+            <div className="form-actions">
+              <button type="submit" className="btn-primary">
+                {isEditing ? "Update Blog Post" : "Publish Blog Post"} 
               </button>
               {isEditing && (
-                <button className="cancelButton" onClick={cancelEdit}>
+                <button type="button" className="btn-secondary" onClick={cancelEdit}>
                   Cancel
                 </button>
               )}
             </div>
-          </div>
+          </form>
         </div>
       )}
       
       {/* Message for Job Seekers */}
       {user?.role === "Job Seeker" && (
-        <div className="jobSeekerMessage">
-          <p>📖 Welcome! Here you can read blogs shared by companies and employers.</p>
+        <div className="job-seeker-message">
+          <div className="message-icon">📖</div>
+          <h3>Welcome to our Blog!</h3>
+          <p>Discover insights, updates, and stories from our team and company.</p>
         </div>
       )}
     </div>

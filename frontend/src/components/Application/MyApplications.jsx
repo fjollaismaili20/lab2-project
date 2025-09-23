@@ -3,13 +3,16 @@ import { Context } from "../../main";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { FaTrash, FaEye, FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaFileAlt, FaCalendarAlt, FaBuilding } from "react-icons/fa";
 import ResumeModal from "./ResumeModal";
+import './MyApplications.css';
 
 const MyApplications = () => {
   const { user } = useContext(Context);
   const [applications, setApplications] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [resumeImageUrl, setResumeImageUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   const { isAuthorized } = useContext(Context);
   const navigateTo = useNavigate();
@@ -17,6 +20,7 @@ const MyApplications = () => {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
+        setIsLoading(true);
         if (user && user.role === "Employer") {
           const response = await axios.get("http://localhost:4000/api/v1/application/employer/getall", {
             withCredentials: true,
@@ -35,6 +39,8 @@ const MyApplications = () => {
         } else {
           toast.error('Failed to fetch applications');
         }
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -135,56 +141,178 @@ const MyApplications = () => {
     setModalOpen(false);
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Not specified';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="modern-applications-container">
+        <div className="loading-container">
+          <div className="loading-spinner">
+            <div className="spinner"></div>
+            <p>Loading applications...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <section className="my_applications page">
-      {user && user.role === "Job Seeker" ? (
-        <div className="container">
-          <h1>My Applications</h1>
-          {applications.length <= 0 ? (
-            <div className="no-applications">
-              <h4>No Applications Found</h4>
+    <div className="modern-applications-container">
+      {/* Header Section */}
+      <div className="applications-header">
+        <h1 className="applications-title">
+          {user && user.role === "Job Seeker" ? "My Applications" : "Job Applications"}
+        </h1>
+        <p className="applications-subtitle">
+          {user && user.role === "Job Seeker" 
+            ? "Track your job applications and their status" 
+            : "Review applications from job seekers"}
+        </p>
+        <div className="applications-stats">
+          <div className="stat-item">
+            <span className="stat-number">{applications.length}</span>
+            <span className="stat-label">Total Applications</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-number">{applications.filter(app => app.status === 'pending').length}</span>
+            <span className="stat-label">Pending</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-number">{applications.filter(app => app.status === 'reviewed').length}</span>
+            <span className="stat-label">Reviewed</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Applications Grid */}
+      <div className="applications-grid">
+        {applications.length > 0 ? (
+          applications.map((application) => (
+            <div key={application.id} className="application-card">
+              {/* Application Header */}
+              <div className="application-card-header">
+                <div className="applicant-info">
+                  <div className="applicant-avatar">
+                    <FaUser />
+                  </div>
+                  <div className="applicant-details">
+                    <h3 className="applicant-name">{application.name}</h3>
+                    <p className="applicant-email">{application.email}</p>
+                  </div>
+                </div>
+                <div className="application-actions">
+                  {user && user.role === "Job Seeker" && (
+                    <button
+                      onClick={() => deleteApplication(application.id)}
+                      className="delete-btn"
+                      title="Delete Application"
+                    >
+                      <FaTrash />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => openModal(application.resume_url)}
+                    className="view-resume-btn"
+                    title="View Resume"
+                  >
+                    <FaEye />
+                  </button>
+                </div>
+              </div>
+
+              {/* Application Details */}
+              <div className="application-details">
+                <div className="detail-row">
+                  <div className="detail-item">
+                    <FaPhone className="detail-icon" />
+                    <span className="detail-label">Phone</span>
+                    <span className="detail-value">{application.phone}</span>
+                  </div>
+                  <div className="detail-item">
+                    <FaMapMarkerAlt className="detail-icon" />
+                    <span className="detail-label">Address</span>
+                    <span className="detail-value">{application.address}</span>
+                  </div>
+                </div>
+
+                {application.job && (
+                  <div className="job-info">
+                    <div className="job-header">
+                      <FaBuilding className="job-icon" />
+                      <span className="job-label">Applied for</span>
+                    </div>
+                    <div className="job-details">
+                      <h4 className="job-title">{application.job.title}</h4>
+                      <p className="job-company">{application.job.company?.companyName}</p>
+                      <p className="job-location">📍 {application.job.city}, {application.job.country}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="application-meta">
+                  <div className="meta-item">
+                    <FaCalendarAlt className="meta-icon" />
+                    <span className="meta-label">Applied on</span>
+                    <span className="meta-value">{formatDate(application.createdAt)}</span>
+                  </div>
+                  <div className="meta-item">
+                    <span className={`status-badge ${application.status || 'pending'}`}>
+                      {application.status || 'Pending'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cover Letter */}
+              <div className="cover-letter-section">
+                <h4 className="cover-letter-title">
+                  <FaFileAlt className="cover-letter-icon" />
+                  Cover Letter
+                </h4>
+                <p className="cover-letter-content">{application.cover_letter}</p>
+              </div>
+
+              {/* Resume Preview */}
+              <div className="resume-section">
+                <h4 className="resume-title">Resume</h4>
+                <div className="resume-preview-container">
+                  <ResumePreview 
+                    resumeUrl={application.resume_url}
+                    onClick={() => openModal(application.resume_url)}
+                  />
+                </div>
+              </div>
             </div>
-          ) : (
-            applications.map((element) => {
-              return (
-                <JobSeekerCard
-                  element={element}
-                  key={element.id}
-                  deleteApplication={deleteApplication}
-                  openModal={openModal}
-                />
-              );
-            })
-          )}
-        </div>
-      ) : user && user.role === "Employer" ? (
-        <div className="container">
-          <h1>Applications From Job Seekers</h1>
-          {applications.length <= 0 ? (
-            <div className="no-applications">
-              <h4>No Applications Found</h4>
-            </div>
-          ) : (
-            applications.map((element) => {
-              return (
-                <EmployerCard
-                  element={element}
-                  key={element.id}
-                  openModal={openModal}
-                />
-              );
-            })
-          )}
-        </div>
-      ) : (
-        <div className="container">
-          <h1>Loading...</h1>
-        </div>
-      )}
+          ))
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">📄</div>
+            <h3>No applications found</h3>
+            <p>
+              {user && user.role === "Job Seeker" 
+                ? "You haven't applied to any jobs yet. Start applying to see your applications here!"
+                : "No job applications have been submitted yet."}
+            </p>
+            {user && user.role === "Job Seeker" && (
+              <a href="/job/getall" className="browse-jobs-btn">
+                Browse Available Jobs
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+
       {modalOpen && (
         <ResumeModal imageUrl={resumeImageUrl} onClose={closeModal} />
       )}
-    </section>
+    </div>
   );
 };
 
@@ -211,148 +339,42 @@ const ResumePreview = ({ resumeUrl, onClick }) => {
 
   if (isPdf) {
     return (
-      <div className="pdf-preview" onClick={onClick} style={{ cursor: 'pointer' }}>
-        <div className="pdf-icon" style={{
-          width: '100px',
-          height: '120px',
-          backgroundColor: isOldCloudinaryUrl ? '#fff3cd' : '#f8f9fa',
-          border: `2px solid ${isOldCloudinaryUrl ? '#ffc107' : '#e74c3c'}`,
-          borderRadius: '12px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '12px',
-          color: '#2c3e50',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          transition: 'all 0.3s ease',
-          ':hover': {
-            backgroundColor: isOldCloudinaryUrl ? '#ffc107' : '#e74c3c',
-            color: 'white'
-          }
-        }}>
-          <div style={{ fontSize: '28px', marginBottom: '8px', color: isOldCloudinaryUrl ? '#ffc107' : '#e74c3c' }}>
-            {isOldCloudinaryUrl ? '⚠️' : '📄'}
-          </div>
-          <div style={{ fontWeight: 'bold', textAlign: 'center' }}>
-            {isOldCloudinaryUrl ? 'Old Resume' : 'PDF Resume'}
-          </div>
-          <div style={{ fontSize: '10px', marginTop: '4px', opacity: 0.8 }}>
-            {isOldCloudinaryUrl ? 'File unavailable' : 'Click to download'}
-          </div>
+      <div className="modern-resume-preview pdf" onClick={onClick}>
+        <div className="resume-icon">
+          {isOldCloudinaryUrl ? '⚠️' : '📄'}
+        </div>
+        <div className="resume-type">
+          {isOldCloudinaryUrl ? 'Old Resume' : 'PDF Resume'}
+        </div>
+        <div className="resume-action">
+          {isOldCloudinaryUrl ? 'File unavailable' : 'Click to download'}
         </div>
       </div>
     );
   }
 
   if (isOldCloudinaryUrl) {
-    // Show a placeholder for old Cloudinary images
     return (
-      <div className="old-image-placeholder" onClick={onClick} style={{ 
-        cursor: 'pointer',
-        width: '100px',
-        height: '120px',
-        backgroundColor: '#fff3cd',
-        border: '2px solid #ffc107',
-        borderRadius: '8px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '12px',
-        color: '#856404',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-      }}>
-        <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚠️</div>
-        <div style={{ fontWeight: 'bold', textAlign: 'center' }}>Old Image</div>
-        <div style={{ fontSize: '10px', marginTop: '4px', opacity: 0.8 }}>File unavailable</div>
+      <div className="modern-resume-preview old-image" onClick={onClick}>
+        <div className="resume-icon">⚠️</div>
+        <div className="resume-type">Old Image</div>
+        <div className="resume-action">File unavailable</div>
       </div>
     );
   }
 
   return (
-    <img
-      src={fullUrl}
-      alt="resume"
-      onClick={onClick}
-      style={{ 
-        cursor: 'pointer',
-        maxWidth: '100px',
-        maxHeight: '120px',
-        objectFit: 'cover',
-        borderRadius: '8px',
-        border: '2px solid #ddd',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-      }}
-    />
+    <div className="modern-resume-preview image" onClick={onClick}>
+      <img
+        src={fullUrl}
+        alt="resume"
+        className="resume-image"
+      />
+      <div className="resume-overlay">
+        <FaEye className="overlay-icon" />
+        <span>View Resume</span>
+      </div>
+    </div>
   );
 };
 
-const JobSeekerCard = ({ element, deleteApplication, openModal }) => {
-  return (
-    <>
-      <div className="job_seeker_card">
-        <div className="detail">
-          <p>
-            <span>Name:</span> {element.name}
-          </p>
-          <p>
-            <span>Email:</span> {element.email}
-          </p>
-          <p>
-            <span>Phone:</span> {element.phone}
-          </p>
-          <p>
-            <span>Address:</span> {element.address}
-          </p>
-          <p>
-            <span>CoverLetter:</span> {element.cover_letter}
-          </p>
-        </div>
-        <div className="resume">
-          <ResumePreview 
-            resumeUrl={element.resume_url}
-            onClick={() => openModal(element.resume_url)}
-          />
-        </div>
-        <div className="btn_area">
-          <button onClick={() => deleteApplication(element.id)}>
-            Delete Application
-          </button>
-        </div>
-      </div>
-    </>
-  );
-};
-
-const EmployerCard = ({ element, openModal }) => {
-  return (
-    <>
-      <div className="job_seeker_card">
-        <div className="detail">
-          <p>
-            <span>Name:</span> {element.name}
-          </p>
-          <p>
-            <span>Email:</span> {element.email}
-          </p>
-          <p>
-            <span>Phone:</span> {element.phone}
-          </p>
-          <p>
-            <span>Address:</span> {element.address}
-          </p>
-          <p>
-            <span>CoverLetter:</span> {element.cover_letter}
-          </p>
-        </div>
-        <div className="resume">
-          <ResumePreview 
-            resumeUrl={element.resume_url}
-            onClick={() => openModal(element.resume_url)}
-          />
-        </div>
-      </div>
-    </>
-  );
-};

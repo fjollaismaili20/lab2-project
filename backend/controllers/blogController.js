@@ -8,13 +8,31 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Funksioni për të marrë të gjitha blogjet
+// Funksioni për të marrë të gjitha blogjet me pagination
 export const getBlogs = catchAsyncErrors(async (req, res, next) => {
   try {
-    const blogs = await Blog.find().sort({ createdAt: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 6;
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const totalBlogs = await Blog.countDocuments();
+    const totalPages = Math.ceil(totalBlogs / limit);
+
+    // Get paginated blogs
+    const blogs = await Blog.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
     res.status(200).json({
       success: true,
       blogs,
+      currentPage: page,
+      totalPages,
+      totalBlogs,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
     });
   } catch (error) {
     console.error("Error fetching blogs:", error);

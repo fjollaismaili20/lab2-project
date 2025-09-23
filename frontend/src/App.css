@@ -1740,15 +1740,16 @@ p {
 }
 
 /* ===========================================
-   CLEAN FOOTER STYLES
+   SIMPLE FOOTER STYLES
    =========================================== */
-.modern-footer {
+.simple-footer {
   background: #1f2937;
   color: #d1d5db;
   margin-top: auto;
+  padding: 20px 0;
 }
 
-.modern-footer.footerHide {
+.simple-footer.footerHide {
   display: none;
 }
 
@@ -1762,7 +1763,8 @@ p {
   border: none;
   border-radius: 50%;
   color: white;
-  font-size: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -1785,141 +1787,26 @@ p {
   box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
 }
 
-.footer-container {
+.footer-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 48px 20px 24px;
-}
-
-.footer-main {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
-  gap: 32px;
-  margin-bottom: 32px;
-}
-
-.footer-section {
-  display: flex;
-  flex-direction: column;
-}
-
-.footer-logo {
-  display: flex;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.footer-logo .logo-icon {
-  width: 32px;
-  height: 32px;
-  background: #3b82f6;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1rem;
-  margin-right: 8px;
-}
-
-.footer-logo .logo-text {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: white;
-}
-
-.footer-description {
-  color: #9ca3af;
-  line-height: 1.6;
-  margin-bottom: 20px;
-  font-size: 0.875rem;
-}
-
-.social-links {
-  display: flex;
-  gap: 12px;
-}
-
-.social-link {
-  width: 36px;
-  height: 36px;
-  background: #374151;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #9ca3af;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  border: 1px solid #4b5563;
-}
-
-.social-link:hover {
-  background: #3b82f6;
-  color: white;
-  transform: translateY(-2px);
-}
-
-.footer-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: white;
-}
-
-.footer-links {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.footer-links li {
-  margin-bottom: 8px;
-}
-
-.footer-links a {
-  color: #9ca3af;
-  text-decoration: none;
-  transition: color 0.2s ease;
-  font-size: 0.875rem;
-}
-
-.footer-links a:hover {
-  color: white;
-}
-
-.contact-info {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.contact-item {
-  display: flex;
-  align-items: center;
-  color: #9ca3af;
-  font-size: 0.875rem;
-}
-
-.contact-icon {
-  margin-right: 8px;
-  color: #3b82f6;
-  font-size: 0.875rem;
-  width: 16px;
-  text-align: center;
-}
-
-.footer-bottom {
-  border-top: 1px solid #374151;
-  padding-top: 24px;
-}
-
-.footer-bottom-content {
+  padding: 0 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+}
+
+.footer-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
 }
 
 .footer-copyright p {
@@ -1928,63 +1815,16 @@ p {
   font-size: 0.875rem;
 }
 
-.footer-legal {
-  display: flex;
-  gap: 24px;
-}
-
-.footer-legal a {
-  color: #9ca3af;
-  text-decoration: none;
-  font-size: 0.875rem;
-  transition: color 0.2s ease;
-}
-
-.footer-legal a:hover {
-  color: white;
-}
-
 /* Footer Responsive */
-@media (max-width: 1024px) {
-  .footer-main {
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 24px;
-  }
-}
-
 @media (max-width: 768px) {
-  .footer-main {
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-  
-  .footer-bottom-content {
+  .footer-content {
     flex-direction: column;
     text-align: center;
-  }
-  
-  .footer-legal {
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .footer-main {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  .footer-container {
-    padding: 32px 16px 20px;
-  }
-  
-  .social-links {
-    justify-content: center;
-  }
-  
-  .footer-legal {
-    flex-direction: column;
     gap: 12px;
+  }
+  
+  .footer-content {
+    padding: 0 16px;
   }
 }
 

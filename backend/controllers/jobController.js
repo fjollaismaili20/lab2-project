@@ -28,10 +28,38 @@ const mapJobRow = (row) => ({
 export const getAllJobs = catchAsyncErrors(async (req, res, next) => {
   const client = await pool.connect();
   try {
-    const result = await client.query(jobQueries.findAll);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 6;
+    const offset = (page - 1) * limit;
+
+    // Get total count for pagination
+    const countResult = await client.query(`
+      SELECT COUNT(*) FROM jobs j 
+      LEFT JOIN companies c ON j.company_id = c.id 
+      WHERE j.expired = FALSE
+    `);
+    const totalJobs = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalJobs / limit);
+
+    // Get paginated jobs
+    const result = await client.query(`
+      SELECT j.*, c.company_name, c.address AS company_address, c.id AS company_id, 
+             c.company_image_url, c.company_image_filename
+      FROM jobs j 
+      LEFT JOIN companies c ON j.company_id = c.id 
+      WHERE j.expired = FALSE 
+      ORDER BY j.job_posted_on DESC
+      LIMIT $1 OFFSET $2
+    `, [limit, offset]);
+
     res.status(200).json({
       success: true,
       jobs: result.rows.map(mapJobRow),
+      currentPage: page,
+      totalPages,
+      totalJobs,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
     });
   } catch (error) {
     console.error('Error fetching jobs:', error);
@@ -51,8 +79,14 @@ export const searchJobs = catchAsyncErrors(async (req, res, next) => {
       country, 
       salaryMin, 
       salaryMax,
-      salaryType 
+      salaryType,
+      page = 1,
+      limit = 6
     } = req.query;
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const offset = (pageNum - 1) * limitNum;
 
     let query = jobQueries.findAll;
     const conditions = [];
@@ -119,20 +153,44 @@ export const searchJobs = catchAsyncErrors(async (req, res, next) => {
       }
     }
 
-    // Build the final query
-    if (conditions.length > 0) {
-      query = query.replace('WHERE j.expired = FALSE', `WHERE j.expired = FALSE AND ${conditions.join(' AND ')}`);
-    }
+    // Build WHERE clause
+    const whereClause = conditions.length > 0 
+      ? `WHERE j.expired = FALSE AND ${conditions.join(' AND ')}`
+      : `WHERE j.expired = FALSE`;
 
-    console.log('Search query:', query);
-    console.log('Search values:', values);
+    // Get total count for pagination
+    const countQuery = `
+      SELECT COUNT(*) 
+      FROM jobs j 
+      LEFT JOIN companies c ON j.company_id = c.id 
+      ${whereClause}
+    `;
+    const countResult = await client.query(countQuery, values);
+    const totalJobs = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalJobs / limitNum);
 
-    const result = await client.query(query, values);
+    // Get paginated results
+    const searchQuery = `
+      SELECT j.*, c.company_name, c.address AS company_address, c.id AS company_id, 
+             c.company_image_url, c.company_image_filename
+      FROM jobs j 
+      LEFT JOIN companies c ON j.company_id = c.id 
+      ${whereClause}
+      ORDER BY j.job_posted_on DESC
+      LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
+    `;
+    
+    const searchValues = [...values, limitNum, offset];
+    const result = await client.query(searchQuery, searchValues);
     
     res.status(200).json({
       success: true,
       jobs: result.rows.map(mapJobRow),
-      total: result.rows.length
+      total: totalJobs,
+      currentPage: pageNum,
+      totalPages,
+      hasNextPage: pageNum < totalPages,
+      hasPrevPage: pageNum > 1
     });
   } catch (error) {
     console.error('Error searching jobs:', error);
