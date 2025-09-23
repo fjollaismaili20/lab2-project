@@ -247,6 +247,7 @@ p {
   display: none;
 }
 
+/* OLD HOME PAGE STYLES - NO LONGER USED (replaced by modern Home.css) */
 .heroSection {
   display: flex;
   flex-direction: column;

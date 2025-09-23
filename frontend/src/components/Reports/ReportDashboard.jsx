@@ -15,6 +15,7 @@ import {
   FaBuilding,
   FaChartLine
 } from 'react-icons/fa';
+import './ReportDashboard.css';
 
 const ReportDashboard = () => {
   const [reportData, setReportData] = useState(null);
@@ -154,45 +155,78 @@ const ReportDashboard = () => {
     </div>
   );
 
-  const ChartCard = ({ title, data, type = 'bar' }) => (
-    <div className="chart-card">
-      <h3>{title}</h3>
-      <div className="chart-content">
-        {data && data.length > 0 ? (
-          <div className="chart-bars">
-            {data.slice(0, 10).map((item, index) => (
-              <div key={index} className="chart-bar">
-                <div className="bar-label">{item.period || item.category || item.company_name}</div>
-                <div className="bar-container">
-                  <div 
-                    className="bar-fill" 
-                    style={{ 
-                      width: `${Math.max(5, (item.application_count || item.total_applications || 0) / Math.max(...data.map(d => d.application_count || d.total_applications || 0)) * 100)}%` 
-                    }}
-                  ></div>
-                  <span className="bar-value">{item.application_count || item.total_applications || 0}</span>
-                </div>
-              </div>
-            ))}
+  const ChartCard = ({ title, data, type = 'bar' }) => {
+    const maxValue = data && data.length > 0 ? Math.max(...data.map(d => d.application_count || d.total_applications || 0)) : 0;
+    
+    return (
+      <div className="chart-card">
+        <div className="chart-header">
+          <h3>{title}</h3>
+          <div className="chart-summary">
+            <span className="total-value">{data?.reduce((sum, item) => sum + (item.application_count || item.total_applications || 0), 0) || 0}</span>
+            <span className="total-label">Total</span>
           </div>
-        ) : (
-          <p className="no-data">No data available</p>
-        )}
+        </div>
+        <div className="chart-content">
+          {data && data.length > 0 ? (
+            <div className="chart-bars">
+              {data.slice(0, 8).map((item, index) => {
+                const value = item.application_count || item.total_applications || 0;
+                const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
+                const label = item.period || item.category || item.company_name || 'Unknown';
+                
+                return (
+                  <div key={index} className="chart-bar">
+                    <div className="bar-info">
+                      <div className="bar-label">{label}</div>
+                      <div className="bar-value">{value}</div>
+                    </div>
+                    <div className="bar-container">
+                      <div 
+                        className="bar-fill" 
+                        style={{ width: `${Math.max(2, percentage)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="no-data">
+              <div className="no-data-icon">📊</div>
+              <p>No data available</p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (!isAuthorized || (user && user.role !== "Employer")) {
     return null;
   }
 
   return (
-    <div className="report-dashboard">
-      <div className="container">
-        <div className="dashboard-header">
-          <h1><FaChartBar /> Report Dashboard</h1>
-          <p>Comprehensive analytics and insights for job applications</p>
+    <div className="modern-reports-container">
+      {/* Header Section */}
+      <div className="reports-header">
+        <h1 className="reports-main-title">Report Dashboard</h1>
+        <p className="reports-subtitle">Comprehensive analytics and insights for job applications</p>
+        <div className="reports-stats">
+          <div className="stat-item">
+            <span className="stat-number">{reportData?.overallStats?.total_applications || 0}</span>
+            <span className="stat-label">Total Applications</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-number">{reportData?.overallStats?.unique_applicants || 0}</span>
+            <span className="stat-label">Unique Applicants</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-number">{reportData?.overallStats?.jobs_with_applications || 0}</span>
+            <span className="stat-label">Active Jobs</span>
+          </div>
         </div>
+      </div>
 
         {/* Filters Section */}
         <div className="filters-section">
@@ -334,7 +368,7 @@ const ReportDashboard = () => {
           </div>
         ) : (
           <div className="dashboard-content">
-            {activeTab === 'overview' && reportData && (
+            {activeTab === 'overview' && reportData ? (
               <div className="overview-tab">
                 {/* Statistics Cards */}
                 <div className="stats-grid">
@@ -383,9 +417,15 @@ const ReportDashboard = () => {
                   />
                 </div>
               </div>
-            )}
+            ) : activeTab === 'overview' && !reportData ? (
+              <div className="empty-state">
+                <div className="empty-icon">📊</div>
+                <h3>No Report Data</h3>
+                <p>Click "Generate Report" to view analytics and insights</p>
+              </div>
+            ) : null}
 
-            {activeTab === 'detailed' && detailedData && (
+            {activeTab === 'detailed' && detailedData ? (
               <div className="detailed-tab">
                 <div className="detailed-header">
                   <h3>Detailed Applications ({detailedData.total})</h3>
@@ -419,10 +459,15 @@ const ReportDashboard = () => {
                   </table>
                 </div>
               </div>
-            )}
+            ) : activeTab === 'detailed' && !detailedData ? (
+              <div className="empty-state">
+                <div className="empty-icon">📋</div>
+                <h3>No Detailed Data</h3>
+                <p>Click "Load Detailed Data" to view application details</p>
+              </div>
+            ) : null}
           </div>
         )}
-      </div>
     </div>
   );
 };
