@@ -122,8 +122,8 @@ body {
 /* Jobs Grid */
 .my-jobs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+  gap: 24px;
   margin-top: 20px;
   padding: 0 10px;
 }
@@ -131,17 +131,20 @@ body {
 /* Job Management Card */
 .job-management-card {
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
   overflow: hidden;
   transition: all 0.3s ease;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .job-management-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  border-color: #d1d5db;
 }
 
 .job-management-card.editing {
@@ -152,8 +155,12 @@ body {
 /* Company Image */
 .job-card-image {
   position: relative;
-  height: 200px;
+  height: 120px;
   overflow: hidden;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .card-company-image {
@@ -164,13 +171,13 @@ body {
 }
 
 .job-management-card:hover .card-company-image {
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 .job-status-badge {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 12px;
+  right: 12px;
 }
 
 .status-active {
@@ -195,7 +202,10 @@ body {
 
 /* Job Card Content */
 .job-card-content {
-  padding: 20px;
+  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Job Header */
@@ -203,14 +213,16 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
-  gap: 12px;
+  margin-bottom: 20px;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .job-title {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #1e293b;
   margin: 0;
   flex: 1;
   line-height: 1.3;
@@ -302,48 +314,53 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
-  padding: 10px 14px;
-  background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%);
-  border-radius: 10px;
-  border: 1px solid rgba(102, 126, 234, 0.1);
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .company-icon {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  color: #64748b;
 }
 
 .company-name {
   font-weight: 600;
-  color: #667eea;
-  font-size: 1rem;
+  color: #475569;
+  font-size: 0.95rem;
 }
 
 /* Job Details Grid */
 .job-details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .detail-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .detail-label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #666;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .detail-value {
-  font-size: 0.95rem;
-  color: #1a1a1a;
+  font-size: 0.9rem;
+  color: #1e293b;
   font-weight: 500;
 }
 
@@ -408,25 +425,38 @@ body {
 /* Job Description */
 .job-description {
   margin-bottom: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .description-text {
   margin: 8px 0 0 0;
-  color: #4a5568;
-  line-height: 1.6;
-  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.5;
+  font-size: 0.9rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Location Details */
 .job-location-details {
   margin-bottom: 0;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .location-text {
   margin: 8px 0 0 0;
-  color: #4a5568;
-  line-height: 1.6;
-  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.5;
+  font-size: 0.9rem;
 }
 
 /* Empty State */

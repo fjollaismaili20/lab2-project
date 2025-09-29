@@ -269,7 +269,7 @@ const Home = () => {
               </div>
               <div className="jobs-grid">
                 {featuredJobs.length > 0 ? (
-                  featuredJobs.slice(0, 4).map((job) => (
+                  featuredJobs.slice(0, 3).map((job) => (
                     <Link key={job.id} to={`/job/${job.id}`}>
                       <JobCard job={job} />
                     </Link>
@@ -292,7 +292,7 @@ const Home = () => {
               </div>
               <div className="companies-grid">
                 {featuredCompanies.length > 0 ? (
-                  featuredCompanies.slice(0, 4).map((company) => (
+                  featuredCompanies.slice(0, 3).map((company) => (
                     <Link key={company.id} to="/companies">
                       <CompanyCard company={company} />
                     </Link>

@@ -317,6 +317,11 @@ const MyJobs = () => {
                     <span className="detail-label">Posted</span>
                     <span className="detail-value">📅 {formatDate(job.jobPostedOn)}</span>
                   </div>
+
+                  <div className="detail-item">
+                    <span className="detail-label">Type</span>
+                    <span className="detail-value">💼 Full-time</span>
+                  </div>
                 </div>
 
                 {/* Description */}
