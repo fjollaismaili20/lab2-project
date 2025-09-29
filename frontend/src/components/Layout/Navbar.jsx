@@ -8,7 +8,7 @@ const Navbar = () => {
   const [show, setShow] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const { isAuthorized, setIsAuthorized, user } = useContext(Context);
+  const { isAuthorized, setIsAuthorized, user, setUser } = useContext(Context);
   const navigateTo = useNavigate();
 
   // Handle scroll effect
@@ -45,9 +45,11 @@ const Navbar = () => {
       );
       toast.success(response.data.message);
       setIsAuthorized(false);
+      setUser({}); // Clear user data
       navigateTo("/login");
     } catch (error) {
-      toast.error(error.response.data.message), setIsAuthorized(true);
+      toast.error(error.response.data.message);
+      setIsAuthorized(false);
     }
   };
 
@@ -112,11 +114,18 @@ const Navbar = () => {
             )}
 
             {user && user.role !== "Employer" && (
-              <li className="nav-item">
-                <Link to="/applications/me" className="nav-link" onClick={() => setShow(false)}>
-                  <span>My Applications</span>
-                </Link>
-              </li>
+              <>
+                <li className="nav-item">
+                  <Link to="/applications/me" className="nav-link" onClick={() => setShow(false)}>
+                    <span>My Applications</span>
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link to="/blogs" className="nav-link" onClick={() => setShow(false)}>
+                    <span>Blogs</span>
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
         </div>
@@ -218,11 +227,18 @@ const Navbar = () => {
                 </li>
               </>
             ) : (
-              <li className="mobile-nav-item">
-                <Link to="/applications/me" className="mobile-nav-link" onClick={() => setShow(false)}>
-                  <span>My Applications</span>
-                </Link>
-              </li>
+              <>
+                <li className="mobile-nav-item">
+                  <Link to="/applications/me" className="mobile-nav-link" onClick={() => setShow(false)}>
+                    <span>My Applications</span>
+                  </Link>
+                </li>
+                <li className="mobile-nav-item">
+                  <Link to="/blogs" className="mobile-nav-link" onClick={() => setShow(false)}>
+                    <span>Blogs</span>
+                  </Link>
+                </li>
+              </>
             )}
             
             <li className="mobile-nav-item">

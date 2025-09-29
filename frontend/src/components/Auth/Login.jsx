@@ -11,11 +11,13 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const { isAuthorized, setIsAuthorized, setUser } = useContext(Context);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const { data } = await axios.post(
         "http://localhost:4000/api/v1/user/login",
@@ -35,10 +37,13 @@ const Login = () => {
       setIsAuthorized(true);
     } catch (error) {
       toast.error(error.response.data.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if(isAuthorized){
+  // Only redirect if user is already authorized (not from form submission)
+  if(isAuthorized && !isLoading){
     return <Navigate to={'/'}/>
   }
 
@@ -75,8 +80,8 @@ const Login = () => {
                 <RiLock2Fill />
               </div>
             </div>
-            <button type="submit" onClick={handleLogin}>
-              Login
+            <button type="submit" onClick={handleLogin} disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
             </button>
             <Link to={"/register"}>Register Now</Link>
           </form>

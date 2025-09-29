@@ -89,7 +89,7 @@ const Blog = () => {
     }
   }, [searchParams, blogs, navigateTo, user]);
 
-  // Redirect if not authorized
+  // Redirect if not authorized (but allow job seekers to view)
   if (!isAuthorized) {
     navigateTo("/login");
   }
@@ -631,7 +631,7 @@ const Blog = () => {
         <div className="job-seeker-message">
           <div className="message-icon">📖</div>
           <h3>Welcome to our Blog!</h3>
-          <p>Discover insights, updates, and stories from our team and company.</p>
+          <p>Discover insights, updates, and stories from our team and company. You can read all blog posts but cannot create, edit, or delete them.</p>
         </div>
       )}
     </div>

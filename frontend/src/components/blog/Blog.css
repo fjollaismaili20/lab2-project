@@ -759,3 +759,59 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
+
+/* Job Seeker Message Styles */
+.job-seeker-message {
+  background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+  border: 2px solid #0ea5e9;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  margin: 40px 0;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+}
+
+.job-seeker-message .message-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.job-seeker-message h3 {
+  color: #0c4a6e;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.job-seeker-message p {
+  color: #075985;
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Job Seeker Notice in Blog Detail */
+.job-seeker-notice {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.1);
+}
+
+.job-seeker-notice .notice-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.job-seeker-notice p {
+  color: #92400e;
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.5;
+}

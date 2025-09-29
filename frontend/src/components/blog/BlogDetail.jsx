@@ -32,7 +32,7 @@ const BlogDetail = () => {
     }
   }, [id, navigateTo]);
 
-  // Redirect if not authorized
+  // Redirect if not authorized (job seekers can view blogs)
   if (!isAuthorized) {
     navigateTo("/login");
   }
@@ -146,6 +146,14 @@ const BlogDetail = () => {
         {/* Blog Content */}
         <div className="blog-detail-content">
           <h1 className="blog-detail-title">{blog.title}</h1>
+          
+          {/* Job Seeker Notice */}
+          {user?.role === "Job Seeker" && (
+            <div className="job-seeker-notice">
+              <div className="notice-icon">ℹ️</div>
+              <p>You are viewing this blog post in read-only mode. Only employers can create, edit, or delete blog posts.</p>
+            </div>
+          )}
           
           <div className="blog-detail-body">
             <p className="blog-detail-text">{blog.content}</p>

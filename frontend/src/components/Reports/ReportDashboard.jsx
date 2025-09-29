@@ -156,14 +156,44 @@ const ReportDashboard = () => {
   );
 
   const ChartCard = ({ title, data, type = 'bar' }) => {
-    const maxValue = data && data.length > 0 ? Math.max(...data.map(d => d.application_count || d.total_applications || 0)) : 0;
+    // Debug: Log the data structure
+    console.log(`ChartCard ${title} data:`, data);
+    
+    // Calculate total properly
+    const calculateTotal = (data) => {
+      if (!data || !Array.isArray(data)) return 0;
+      
+      const total = data.reduce((sum, item) => {
+        // Try different possible field names for the count
+        const count = item.application_count || 
+                     item.total_applications || 
+                     item.count || 
+                     item.applications || 
+                     item.value || 
+                     0;
+        
+        // Ensure we're adding numbers, not concatenating strings
+        const numericCount = typeof count === 'number' ? count : parseInt(count) || 0;
+        console.log(`Item:`, item, `Count:`, count, `NumericCount:`, numericCount, `Running Sum:`, sum + numericCount);
+        return sum + numericCount;
+      }, 0);
+      
+      console.log(`Total for ${title}:`, total);
+      return total;
+    };
+
+    const total = calculateTotal(data);
+    const maxValue = data && data.length > 0 ? Math.max(...data.map(d => {
+      const count = d.application_count || d.total_applications || d.count || d.applications || d.value || 0;
+      return typeof count === 'number' ? count : parseInt(count) || 0;
+    })) : 0;
     
     return (
       <div className="chart-card">
         <div className="chart-header">
           <h3>{title}</h3>
           <div className="chart-summary">
-            <span className="total-value">{data?.reduce((sum, item) => sum + (item.application_count || item.total_applications || 0), 0) || 0}</span>
+            <span className="total-value">{total}</span>
             <span className="total-label">Total</span>
           </div>
         </div>
@@ -171,7 +201,8 @@ const ReportDashboard = () => {
           {data && data.length > 0 ? (
             <div className="chart-bars">
               {data.slice(0, 8).map((item, index) => {
-                const value = item.application_count || item.total_applications || 0;
+                const count = item.application_count || item.total_applications || item.count || item.applications || item.value || 0;
+                const value = typeof count === 'number' ? count : parseInt(count) || 0;
                 const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
                 const label = item.period || item.category || item.company_name || 'Unknown';
                 
