@@ -3,11 +3,11 @@ import { Context } from "../../main";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { FaUser, FaSignOutAlt } from "react-icons/fa";
 
 const Navbar = () => {
   const [show, setShow] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const { isAuthorized, setIsAuthorized, user, setUser } = useContext(Context);
   const navigateTo = useNavigate();
 
@@ -20,19 +20,6 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Handle click outside to close user dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showUserMenu && !event.target.closest('.user-menu')) {
-        setShowUserMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showUserMenu]);
 
 
   const handleLogout = async () => {
@@ -131,34 +118,21 @@ const Navbar = () => {
         </div>
 
 
-        {/* User Menu */}
+        {/* User Info and Logout */}
         <div className="navbar-user">
-          <div className="user-menu">
-            <div 
-              className="user-info"
-              onClick={() => setShowUserMenu(!showUserMenu)}
-            >
-              <div className="user-avatar">
-                <span>👤</span>
-              </div>
-              <div className="user-details">
-                <span className="user-name">{user?.name || "User"}</span>
-                <span className="user-role">{user?.role || "Guest"}</span>
-              </div>
-              <span className={`dropdown-icon ${showUserMenu ? 'rotated' : ''}`}>▼</span>
+          <div className="user-info-display">
+            <div className="user-avatar">
+              <span>👤</span>
             </div>
-            
-            <div 
-              className={`user-dropdown ${showUserMenu ? 'show' : ''}`}
-            >
-              <div className="dropdown-item">
-                <span>Profile</span>
-              </div>
-              <div className="dropdown-item" onClick={handleLogout}>
-                <span>Logout</span>
-              </div>
+            <div className="user-details">
+              <span className="user-name">{user?.name || "User"}</span>
+              <span className="user-role">{user?.role || "Guest"}</span>
             </div>
           </div>
+          <button className="navbar-logout-btn" onClick={handleLogout}>
+            <FaSignOutAlt className="logout-icon" />
+            <span>Logout</span>
+          </button>
         </div>
 
         {/* Mobile Menu Button */}
@@ -243,6 +217,7 @@ const Navbar = () => {
             
             <li className="mobile-nav-item">
               <button className="mobile-logout-btn" onClick={handleLogout}>
+                <FaSignOutAlt className="mobile-nav-icon" />
                 <span>Logout</span>
               </button>
             </li>
