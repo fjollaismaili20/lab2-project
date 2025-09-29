@@ -41,7 +41,7 @@ const Home = () => {
       setIsLoading(true);
       
       // Fetch all data in parallel
-      const [jobsResponse, companiesResponse, blogsResponse] = await Promise.all([
+      const [jobsResponse, companiesResponse, blogsResponse, statsResponse] = await Promise.all([
         axios.get("http://localhost:4000/api/v1/job/getall?limit=6", {
           withCredentials: true,
         }),
@@ -49,6 +49,9 @@ const Home = () => {
           withCredentials: true,
         }),
         axios.get("http://localhost:4000/api/v1/blogs?limit=3", {
+          withCredentials: true,
+        }),
+        axios.get("http://localhost:4000/api/v1/reports/stats", {
           withCredentials: true,
         })
       ]);
@@ -58,17 +61,44 @@ const Home = () => {
       setFeaturedCompanies(companiesResponse.data.companies?.slice(0, 6) || []);
       setRecentBlogs(blogsResponse.data.blogs || []);
 
-      // Calculate stats
+      // Get real statistics from the reports API
+      const overallStats = statsResponse.data.data?.overallStats || {};
+      
+      // Calculate stats with real data
       setStats({
-        totalJobs: jobsResponse.data.totalJobs || jobsResponse.data.jobs?.length || 0,
+        totalJobs: overallStats.total_jobs || jobsResponse.data.totalJobs || jobsResponse.data.jobs?.length || 0,
         totalCompanies: companiesResponse.data.companies?.length || 0,
-        totalUsers: 1250, // Mock data - you can fetch from user API
-        totalApplications: 3420 // Mock data - you can fetch from applications API
+        totalUsers: overallStats.unique_applicants || 0, // Using unique applicants as user count
+        totalApplications: overallStats.total_applications || 0
       });
 
     } catch (error) {
       console.error('Error fetching home data:', error);
       toast.error("Failed to load home data");
+      
+      // Fallback to basic data if stats API fails
+      try {
+        const [jobsResponse, companiesResponse] = await Promise.all([
+          axios.get("http://localhost:4000/api/v1/job/getall?limit=6", {
+            withCredentials: true,
+          }),
+          axios.get("http://localhost:4000/api/v1/companies", {
+            withCredentials: true,
+          })
+        ]);
+
+        setFeaturedJobs(jobsResponse.data.jobs || []);
+        setFeaturedCompanies(companiesResponse.data.companies?.slice(0, 6) || []);
+        
+        setStats({
+          totalJobs: jobsResponse.data.totalJobs || jobsResponse.data.jobs?.length || 0,
+          totalCompanies: companiesResponse.data.companies?.length || 0,
+          totalUsers: 0,
+          totalApplications: 0
+        });
+      } catch (fallbackError) {
+        console.error('Fallback data fetch failed:', fallbackError);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -190,15 +220,33 @@ const Home = () => {
           <div className="hero-visualization">
             <div className="stats-preview">
               <div className="preview-stat">
-                <div className="preview-number">{stats.totalJobs}</div>
+                <div className="preview-number">
+                  {isLoading ? (
+                    <div className="loading-dots">...</div>
+                  ) : (
+                    stats.totalJobs.toLocaleString()
+                  )}
+                </div>
                 <div className="preview-label">Active Jobs</div>
               </div>
               <div className="preview-stat">
-                <div className="preview-number">{stats.totalCompanies}</div>
+                <div className="preview-number">
+                  {isLoading ? (
+                    <div className="loading-dots">...</div>
+                  ) : (
+                    stats.totalCompanies.toLocaleString()
+                  )}
+                </div>
                 <div className="preview-label">Companies</div>
               </div>
               <div className="preview-stat">
-                <div className="preview-number">{stats.totalUsers}</div>
+                <div className="preview-number">
+                  {isLoading ? (
+                    <div className="loading-dots">...</div>
+                  ) : (
+                    stats.totalUsers.toLocaleString()
+                  )}
+                </div>
                 <div className="preview-label">Users</div>
               </div>
             </div>
